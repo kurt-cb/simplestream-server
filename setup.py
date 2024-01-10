@@ -20,6 +20,7 @@ setup(
                 'lxd image server on top of nginx.',
     long_description=io.open('README.md', encoding='utf8').read(),
     long_description_content_type='text/markdown',
+    data_files=[('', ['upload_server/html/*.html'])]
     install_requires=open('requirements.txt').read().splitlines(),
     entry_points={
         'console_scripts': [
