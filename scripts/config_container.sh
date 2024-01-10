@@ -49,9 +49,7 @@ echo "Installing debugging tools"
 apt-get install $OPTIONS strace curl wget netcat nano
 apt-get install $OPTIONS git patch
 echo "Installing lxd-image-server"
-cd lxd-image-server
-pip install -e .
-cd ..
+pip install ./lxd-image-server
 
 cp lxd-image-server/resources/nginx/includes/lxd-image-server.pkg.conf /etc/nginx/lxd-image-server.conf
 mkdir -p /etc/nginx/ssl
@@ -60,7 +58,7 @@ mkdir /etc/nginx/sites-enabled/
 touch /etc/nginx/sites-enabled/simplestreams.conf
 mkdir /etc/lxd-image-server
 mkdir -p /var/www/simplestreams
-/usr/local/bin/lxd-image-server --log-file STDOUT init
+su nginx /usr/local/bin/lxd-image-server --log-file STDOUT init
 chown -R nginx:nginx /var/www/simplestreams
 cp lxd-image-server/scripts/site.conf /etc/nginx/conf.d/default.conf
 cp lxd-image-server/scripts/upload-server.service /etc/systemd/system
