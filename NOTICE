@@ -1,0 +1,16 @@
+This is a set of derivitive works from
+
+Copyright 2024 Kurt Godwin
+https://github.com/kurt-cb/simplestream-server
+Conversion of docker script to bash scripts for lxd container creation
+Additions for uploading/managing images on the server
+
+Copyright 2021 Avature (github user)
+https://github.com/Avature/lxd-image-server
+
+
+Copyright 2020 Cristian Posoiu
+https://github.com/cr1st1p/docker-simplestreams-server
+This service provides the original works for the configuration scripts for the container
+and the upload-server python code
+
