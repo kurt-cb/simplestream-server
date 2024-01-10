@@ -40,9 +40,7 @@ pip3 install --upgrade pip
 pip3 install supervisor
 apt-get install $OPTIONS python3-bottle
 mkdir -p /var/www
-touch /var/www/supervisord.conf
-touch /var/www/supervisord.pid
-chown nginx:nginx /var/www/supervisord.*
+
 echo "Installing debugging tools"
 apt-get install $OPTIONS strace curl wget netcat nano
 apt-get install $OPTIONS git patch
