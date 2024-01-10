@@ -1,4 +1,4 @@
-This is a set of derivitive works from
+This repository/solution is a set of derivitive works from the sources below:
 
 Copyright 2024 Kurt Godwin
 https://github.com/kurt-cb/simplestream-server
@@ -13,4 +13,8 @@ Copyright 2020 Cristian Posoiu
 https://github.com/cr1st1p/docker-simplestreams-server
 This service provides the original works for the configuration scripts for the container
 and the upload-server python code
+
+https://github.com/pi314/hfs/blob/master/hfs/core.py
+Open source that provided foundation upload-server.  No copyright notice in project as of Jan 2024
+
 
