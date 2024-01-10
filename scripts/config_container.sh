@@ -25,17 +25,15 @@ for server in \
     echo "Fetching GPG key $NGINX_GPGKEY from $server";
     apt-key adv --no-tty --keyserver "$server" --keyserver-options timeout=10 --recv-keys "$NGINX_GPGKEY" && found=yes && break;
 done
+useradd nginx
 test -z "$found" && echo >&2 "error: failed to fetch GPG key $NGINX_GPGKEY" && exit 1
 echo "deb https://nginx.org/packages/mainline/ubuntu/ bionic nginx" >> /etc/apt/sources.list.d/nginx.list
 apt-get update -qq
-apt-get install - $OPTIONS \
-        nginx
-echo "forward request and error logs to docker log collector"
-ln -sf /dev/stdout /var/log/nginx/access.log
-ln -sf /dev/stderr /var/log/nginx/error.log
+apt-get install - $OPTIONS nginx
+#sed -i -E -e 's@^\s*user\s+.*;@@' /etc/nginx/nginx.conf
+
 touch /var/run/nginx.pid
-sed -i -E -e 's@^\s*user\s+.*;@@' /etc/nginx/nginx.conf
-chown -R nginx:nginx /var/cache/nginx /var/run/nginx.pid
+chown -R nginx:nginx /var/cache/nginx /var/run/nginx.pid /var/log/nginx
 apt-get install $OPTIONS python3 python3-setuptools python3-pip
 echo "Installing 'supervisor'"
 pip3 install --upgrade pip
@@ -58,8 +56,8 @@ mkdir /etc/nginx/sites-enabled/
 touch /etc/nginx/sites-enabled/simplestreams.conf
 mkdir /etc/lxd-image-server
 mkdir -p /var/www/simplestreams
-su nginx /usr/local/bin/lxd-image-server --log-file STDOUT init
 chown -R nginx:nginx /var/www/simplestreams
+su nginx -c "/usr/local/bin/lxd-image-server --log-file STDOUT init"
 cp lxd-image-server/scripts/site.conf /etc/nginx/conf.d/default.conf
 cp lxd-image-server/scripts/upload-server.service /etc/systemd/system
 cp lxd-image-server/scripts/lxd-image-server.service /etc/systemd/system
