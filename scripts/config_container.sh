@@ -52,6 +52,7 @@ echo "Installing lxd-image-server"
 cd lxd-image-server
 pip install -e .
 cd ..
+
 cp lxd-image-server/resources/nginx/includes/lxd-image-server.pkg.conf /etc/nginx/lxd-image-server.conf
 mkdir -p /etc/nginx/ssl
 touch /etc/nginx/ssl/nginx.key
@@ -61,7 +62,14 @@ mkdir /etc/lxd-image-server
 mkdir -p /var/www/simplestreams
 /usr/local/bin/lxd-image-server --log-file STDOUT init
 chown -R nginx:nginx /var/www/simplestreams
-cp scripts/site.conf /etc/nginx/conf.d/default.conf
+cp lxd-image-server/scripts/site.conf /etc/nginx/conf.d/default.conf
+cp lxd-image-server/scripts/upload-server.service /etc/systemd/system
+cp lxd-image-server/scripts/lxd-image-server.service /etc/systemd/system
+systemctl enable lxd-image-server.service
+systemctl enable upload-server.service
+systemctl enable nginx
+
+#clean up
 apt-get purge -y $OPTIONS git patch
 apt-get purge -y $OPTIONS gnupg2 apt-transport-https ca-certificates
 apt-get purge -y $OPTIONS command-not-found command-not-found-data man-db manpages python3-commandnotfound python3-update-manager update-manager-core
