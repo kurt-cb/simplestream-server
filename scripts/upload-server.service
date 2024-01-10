@@ -12,4 +12,4 @@ StandardOutput=journal+console
 Environment="LC_ALL=C.UTF-8"
 Environment="LANG=C.UTF-8"
 
-ExecStart=/usr/local/bin/upload_server --allow-delete --allow-overwrite --base-dir "/var/www/simplestreams"
+ExecStart=/usr/local/bin/upload-server --allow-delete --allow-overwrite --base-dir "/var/www/simplestreams"

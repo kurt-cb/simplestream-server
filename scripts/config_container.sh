@@ -68,7 +68,9 @@ cp lxd-image-server/scripts/lxd-image-server.service /etc/systemd/system
 systemctl enable lxd-image-server.service
 systemctl enable upload-server.service
 systemctl enable nginx
-
+systemctl start lxd-image-server.service
+systemctl start upload-server.service
+systemctl start nginx
 #clean up
 apt-get purge -y $OPTIONS git patch
 apt-get purge -y $OPTIONS gnupg2 apt-transport-https ca-certificates
