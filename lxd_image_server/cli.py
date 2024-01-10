@@ -21,7 +21,6 @@ from lxd_image_server.tools.config import Config
 logger = logging.getLogger('lxd-image-server')
 event_queue = queue.Queue()
 
-
 def threaded(fn):
     def wrapper(*args, **kwargs):
         threading.Thread(target=fn, args=args, kwargs=kwargs).start()
@@ -31,10 +30,15 @@ def threaded(fn):
 def configure_log(log_file, verbose=False):
     filename = log_file
 
-    handler = TimedRotatingFileHandler(
-        filename,
-        when="d", interval=7, backupCount=4)
-    formatter = logging.Formatter('[%(asctime)s] [%(levelname)s] %(message)s')
+    if log_file == 'STDOUT':
+        handler = logging.StreamHandler(sys.stdout)
+    elif log_file == 'STDERR':
+        handler = logging.StreamHandler(sys.stderr)
+    else:
+        handler = TimedRotatingFileHandler(
+            filename,
+            when="d", interval=7, backupCount=4)
+    formatter = logging.Formatter('[%(asctime)s] [LxdImgServer] [%(levelname)s] %(message)s')
     handler.setFormatter(formatter)
 
     logger.setLevel('DEBUG' if verbose else 'INFO')
@@ -55,14 +59,52 @@ def needs_update(events):
     return modified_files
 
 
-@threaded
-def update_config():
+
+def config_inotify_setup(skipWatchingNonExistent: bool) -> inotify.adapters.Inotify:
     i = inotify.adapters.Inotify()
-    i.add_watch(Config.path, mask=IN_CLOSE_WRITE)
-    for _ in i.event_gen(yield_nones=False):
-        Config.data = {}
-        Config.load_data()
-        MirrorManager.update_mirror_list()
+    watchedDirs = {}
+
+    for p in Config.paths:
+        if os.path.exists(p):
+            if os.path.isfile(p):
+                logger.debug("Watching existing config file {}".format(p))
+                i.add_watch(p, mask= inotify.constants.IN_CLOSE_WRITE | inotify.constants.IN_DELETE)
+            else:
+                logger.debug("Watching existing config directory {}".format(p))
+                i.add_watch(p) # SEEME: all events?
+        elif not skipWatchingNonExistent:
+            (d, n) = os.path.split(p)
+            while not os.path.exists(d):
+                (d, n) = os.path.split(d)
+            if d not in watchedDirs:
+                i.add_watch(d, inotify.constants.IN_DELETE | inotify.constants.IN_CLOSE_WRITE | inotify.constants.IN_CREATE)
+                logger.debug("Watching directory {} as base for {}".format(d, p))
+                watchedDirs[d] = True
+
+    return i
+
+@threaded
+def update_config(skipWatchingNonExistent = True):
+    i = config_inotify_setup(skipWatchingNonExistent)
+    while True:
+        reload = False
+        for event in i.event_gen(yield_nones=False):
+            (_, mask, dir, file) = event
+            fp = os.path.join(dir, file).rstrip(os.path.sep)
+            for p in Config.paths:
+                if p == fp or (dir == p):
+                    reload = True
+                    break
+            if reload:
+                break
+
+        if reload:
+            logger.debug("Will reload configuration")
+            Config.reload_data()
+            i = config_inotify_setup()
+            MirrorManager.update_mirror_list()
+        else:
+            logger.debug("No need to reload configuration")
 
 
 @threaded
@@ -75,7 +117,7 @@ def update_metadata(img_dir, streams_dir):
         if ops:
             logger.info('Updating server: %s', ','.join(
                 str(x) for x in ops.ops))
-            images = Images(str(Path(streams_dir).resolve()))
+            images = Images(str(Path(streams_dir).resolve()), logger=logger)
             images.update(ops.ops)
             images.save()
             MirrorManager.update()
@@ -114,7 +156,10 @@ def cli(log_file, verbose):
 def update(ctx, img_dir, streams_dir):
     logger.info('Updating server')
 
-    images = Images(str(Path(streams_dir).resolve()), rebuild=True)
+    img_dir = Path(img_dir).expanduser().resolve()
+    streams_dir = Path(streams_dir).expanduser().resolve()
+
+    images = Images(str(Path(streams_dir).resolve()), rebuild=True, logger=logger)
 
     # Generate a fake event to update all tree
     fake_events = [
@@ -133,16 +178,24 @@ def update(ctx, img_dir, streams_dir):
               show_default=True)
 @click.option('--ssl_dir', default='/etc/nginx/ssl', show_default=True,
               callback=lambda ctx, param, val: Path(val))
+@click.option('--ssl_skip', default=False, is_flag=True)
+@click.option('--nginx_skip', default=False, is_flag=True)
 @click.pass_context
-def init(ctx, root_dir, ssl_dir):
+def init(ctx, root_dir, ssl_dir, ssl_skip, nginx_skip):
+    root_dir = Path(root_dir).expanduser().resolve()
+
     if not Path(root_dir).exists():
         logger.error('Root directory does not exists')
     else:
-        if not ssl_dir.exists():
-            os.makedirs(str(ssl_dir))
+        if nginx_skip:
+            ssl_skip = True
 
-        if not (ssl_dir / 'nginx.key').exists():
-            generate_cert(str(ssl_dir))
+        if not ssl_skip:
+            if not ssl_dir.exists():
+                os.makedirs(str(ssl_dir))
+
+            if not (ssl_dir / 'nginx.key').exists():
+                generate_cert(str(ssl_dir))
 
         img_dir = str(Path(root_dir, 'images'))
         streams_dir = str(Path(root_dir, 'streams/v1'))
@@ -150,11 +203,13 @@ def init(ctx, root_dir, ssl_dir):
             os.makedirs(img_dir)
         if not Path(streams_dir).exists():
             os.makedirs(streams_dir)
-        conf_path = Path('/etc/nginx/sites-enabled/simplestreams.conf')
-        if not conf_path.exists():
-            conf_path.symlink_to(
-                '/etc/nginx/sites-available/simplestreams.conf')
-            os.system('nginx -s reload')
+
+        if not nginx_skip:
+            conf_path = Path('/etc/nginx/sites-enabled/simplestreams.conf')
+            if not conf_path.exists():
+                conf_path.symlink_to(
+                    '/etc/nginx/sites-available/simplestreams.conf')
+                os.system('nginx -s reload')
 
         if not Path(root_dir, 'streams', 'v1', 'images.json').exists():
             ctx.invoke(update, img_dir=Path(root_dir, 'images'),
@@ -172,14 +227,23 @@ def init(ctx, root_dir, ssl_dir):
 @click.option('--streams_dir', default='/var/www/simplestreams/streams/v1',
               type=click.Path(exists=True, file_okay=False,
                               resolve_path=True), show_default=True)
+@click.option('--skip-watch-config-non-existent', default=False, type=bool, is_flag=True)
 @click.pass_context
-def watch(ctx, img_dir, streams_dir):
+def watch(ctx, img_dir, streams_dir, skip_watch_config_non_existent: bool):
+    path_img_dir = str(Path(img_dir).expanduser().resolve())
+    path_streams_dir = str(Path(streams_dir).expanduser().resolve())
+    logger.info("Starting watch process")
+
     Config.load_data()
     # Lauch threads
-    update_config()
-    update_metadata(img_dir, streams_dir)
+    # SEEME: in case an event will come from watching config files, there is a race condition between update_config
+    # thread using indirectly MirrorManager.img_dir and thread update_metadata setting MirrorManager.img_dir
+    # Also, race condition on calling MirrorManager.update_mirror_list() in both threads.
+    update_config(skip_watch_config_non_existent)
+    update_metadata(path_img_dir, path_streams_dir)
+    logger.debug("Watching image directory {}".format(path_img_dir))
 
-    i = inotify.adapters.InotifyTree(str(Path(img_dir).resolve()),
+    i = inotify.adapters.InotifyTree(path_img_dir,
                                      mask=(IN_ATTRIB | IN_DELETE |
                                            IN_MOVED_FROM | IN_MOVED_TO |
                                            IN_CLOSE_WRITE))
