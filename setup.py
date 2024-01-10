@@ -22,7 +22,10 @@ setup(
     long_description_content_type='text/markdown',
     install_requires=open('requirements.txt').read().splitlines(),
     entry_points={
-        'console_scripts': ['lxd-image-server = lxd_image_server.cli:main']
+        'console_scripts': [
+            'lxd-image-server = lxd_image_server.cli:main',
+            'upload-server = upload_server.cli:main'
+        ]
     },
     packages=find_packages(),
     classifiers=[
