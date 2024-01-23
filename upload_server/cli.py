@@ -364,7 +364,18 @@ def main():
 
     print("BASE_DIR: ", BASE_DIR)
 
-    bottle.run(host='0.0.0.0', port=args.port)
+    #bottle.run(host='0.0.0.0', port=args.port)
+
+    bottle.run(
+        app=BASE, 
+        host='0.0.0.0',
+        port=args.port,
+        server='gunicorn',
+        reloader=1,
+        debug=1,
+        keyfile='key.pem',
+        certfile='cert.pem'
+    ) 
 
 
 if __name__ == '__main__':

@@ -34,12 +34,12 @@ apt-get install - $OPTIONS nginx
 
 touch /var/run/nginx.pid
 chown -R nginx:nginx /var/cache/nginx /var/run/nginx.pid /var/log/nginx
-apt-get install $OPTIONS python3 python3-setuptools python3-pip
+apt-get install $OPTIONS python3 python3-setuptools python3-pip net-tools
 echo "Installing 'supervisor'"
 pip3 install --upgrade pip
 pip3 install supervisor
 apt-get install $OPTIONS python3-bottle
-mkdir -p /var/www
+useradd webserver -d /var/www -m -r
 
 echo "Installing debugging tools"
 apt-get install $OPTIONS strace curl wget netcat nano
