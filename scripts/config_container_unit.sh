@@ -15,35 +15,45 @@ done
 OPTIONS="$OPTIONS --no-install-recommends --no-install-suggests -yqq"
 set -e
 apt-get update -qq
-apt-get install $OPTIONS gnupg2 apt-transport-https ca-certificates curl wget
+apt-get install $OPTIONS \
+   gnupg2 apt-transport-https ca-certificates curl wget \
+   strace curl wget netcat nano git patch net-tools
 
 sudo curl --output /usr/share/keyrings/nginx-keyring.gpg  \
       https://unit.nginx.org/keys/nginx-keyring.gpg
 
+cat <<EOF > /etc/apt/sources.list.d/unit.list
 deb [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org/unit/ubuntu/ bionic unit
 deb-src [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org/unit/ubuntu/ bionic unit
+EOF
 
 sudo apt update
-sudo apt install unit
-sudo apt install unit-dev unit-jsc8 unit-jsc11 unit-perl  \
-      unit-php unit-python2.7 unit-python3.6 unit-python3.7 unit-ruby
+sudo apt install $OPTIONS unit
+sudo apt install $OPTIONS unit-dev unit-jsc8 unit-jsc11 unit-perl  \
+      unit-php unit-python2.7 unit-python3.6 unit-python3.7 unit-ruby uwsgi python3-pip
 sudo systemctl restart unit
 
 echo "Installing debugging tools"
 apt-get install $OPTIONS strace curl wget netcat nano git patch
 
 git clone https://github.com/kurt-cb/simplestream-server.git
-git checkout unit
+
 
 cd simplestream-server
+git checkout unit
+
 mkdir -p /var/www
 
-cp -r bottle /var/www
+cp -r bottle_test /var/www
 cp -r upload_server /var/www
 cp -r html /var/www
 chown -R unit:unit /var/www
 cat unit_config.json | curl -X PUT -d@- localhost:8080/config
 cd ..
+su ubuntu -c "scripts/user_config.sh"
+
+
+
 
 return 0
 
