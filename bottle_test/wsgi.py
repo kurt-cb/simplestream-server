@@ -1,4 +1,4 @@
-from bottle_test.wsgi import Bottle, template
+from bottle import Bottle, template
 import bottle
 
 app = application = Bottle()
