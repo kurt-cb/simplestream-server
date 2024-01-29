@@ -1,6 +1,8 @@
 set -x
 
 ROOTDIR=/opt/lxd-image-server
+
+# wait until ubuntu is up
 while : ; do
     UP=$(ping -c 1 archive.ubuntu.com)
     if [ "$?" == "0" ]; then
@@ -14,34 +16,30 @@ OPTIONS="$OPTIONS --no-install-recommends --no-install-suggests -yqq"
 set -e
 apt-get update -qq
 apt-get install $OPTIONS gnupg2 apt-transport-https ca-certificates
-echo "NGINX SETUP"
-NGINX_GPGKEY=573BFD6B3D8FBC641079A6ABABF5BD827BD9BF62
-found=''
-for server in \
-		ha.pool.sks-keyservers.net \
-		hkp://keyserver.ubuntu.com:80 \
-		hkp://p80.pool.sks-keyservers.net:80 \
-		pgp.mit.edu \
-; do
-    echo "Fetching GPG key $NGINX_GPGKEY from $server";
-    apt-key adv --no-tty --keyserver "$server" --keyserver-options timeout=10 --recv-keys "$NGINX_GPGKEY" && found=yes && break;
-done
-useradd nginx
-test -z "$found" && echo >&2 "error: failed to fetch GPG key $NGINX_GPGKEY" && exit 1
-echo "deb https://nginx.org/packages/mainline/ubuntu/ bionic nginx" >> /etc/apt/sources.list.d/nginx.list
-apt-get update -qq
-apt-get install - $OPTIONS nginx
-#sed -i -E -e 's@^\s*user\s+.*;@@' /etc/nginx/nginx.conf
 
-touch /var/run/nginx.pid
-chown -R nginx:nginx /var/cache/nginx /var/run/nginx.pid /var/log/nginx
-apt-get install $OPTIONS python3 python3-setuptools python3-pip net-tools
-echo "Installing 'supervisor'"
-apt-get install $OPTIONS python3-bottle gunicorn3
+sudo curl --output /usr/share/keyrings/nginx-keyring.gpg  \
+      https://unit.nginx.org/keys/nginx-keyring.gpg
+
+deb [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org/unit/ubuntu/ bionic unit
+deb-src [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org/unit/ubuntu/ bionic unit
+
+sudo apt update
+sudo apt install unit
+sudo apt install unit-dev unit-jsc8 unit-jsc11 unit-perl  \
+      unit-php unit-python2.7 unit-python3.6 unit-python3.7 unit-ruby
+sudo systemctl restart unit
+
+
 
 echo "Installing debugging tools"
-apt-get install $OPTIONS strace curl wget netcat nano
-apt-get install $OPTIONS git patch
+apt-get install $OPTIONS strace curl wget netcat nano git patch
+
+git clone https://github.com/kurt-cb/simplestream-server.git
+git checkout unit
+
+
+return 0
+
 echo "Installing lxd-image-server"
 useradd webserver -G adm,nginx,users,ubuntu -m -r
 mkdir /var/www
@@ -74,6 +72,8 @@ systemctl enable nginx
 #systemctl start lxd-image-server.service
 #systemctl start upload-server.service
 systemctl start nginx
+
+
 #clean up
 apt-get purge -y $OPTIONS git patch
 apt-get purge -y $OPTIONS gnupg2 apt-transport-https ca-certificates

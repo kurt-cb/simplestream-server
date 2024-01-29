@@ -13,4 +13,4 @@ StandardOutput=journal+console
 Environment="LC_ALL=C.UTF-8"
 Environment="LANG=C.UTF-8"
 
-ExecStart=/usr/local/bin/lxd-image-server --basedir /var/www --port 8843 --log-file /var/log/nginx/lxd-image-server.log watch
+ExecStart=/usr/local/bin/lxd-image-server --log-file /var/www/simplestreams/lxd-image-server.log watch
