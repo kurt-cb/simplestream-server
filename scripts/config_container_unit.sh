@@ -17,7 +17,7 @@ set -e
 apt-get update -qq
 apt-get install $OPTIONS \
    gnupg2 apt-transport-https ca-certificates curl wget \
-   strace curl wget netcat nano git patch net-tools
+   strace curl wget netcat nano git patch net-tools build-essential
 
 sudo curl --output /usr/share/keyrings/nginx-keyring.gpg  \
       https://unit.nginx.org/keys/nginx-keyring.gpg
