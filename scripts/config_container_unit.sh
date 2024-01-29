@@ -15,7 +15,7 @@ done
 OPTIONS="$OPTIONS --no-install-recommends --no-install-suggests -yqq"
 set -e
 apt-get update -qq
-apt-get install $OPTIONS gnupg2 apt-transport-https ca-certificates
+apt-get install $OPTIONS gnupg2 apt-transport-https ca-certificates curl wget
 
 sudo curl --output /usr/share/keyrings/nginx-keyring.gpg  \
       https://unit.nginx.org/keys/nginx-keyring.gpg
@@ -29,14 +29,21 @@ sudo apt install unit-dev unit-jsc8 unit-jsc11 unit-perl  \
       unit-php unit-python2.7 unit-python3.6 unit-python3.7 unit-ruby
 sudo systemctl restart unit
 
-
-
 echo "Installing debugging tools"
 apt-get install $OPTIONS strace curl wget netcat nano git patch
 
 git clone https://github.com/kurt-cb/simplestream-server.git
 git checkout unit
 
+cd simplestream-server
+mkdir -p /var/www
+
+cp -r bottle /var/www
+cp -r upload_server /var/www
+cp -r html /var/www
+chown -R unit:unit /var/www
+cat unit_config.json | curl -X PUT -d@- localhost:8080/config
+cd ..
 
 return 0
 

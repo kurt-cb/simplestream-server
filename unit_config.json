@@ -1,0 +1,57 @@
+{
+    "listeners": {
+            "*:8000": {
+                "pass": "routes"
+            }
+    },
+
+    "routes": [
+        {
+            "match": {
+                "uri": "/"
+            },
+            "action": {
+                "share": "/var/www/html$uri"
+            }
+        },
+        {
+            "match": {
+                "uri": "/upload"
+            },
+            "action": {
+                "pass": "applications/upload"
+            }
+        },
+        {
+            "match": {
+                "uri": "/bottle"
+            },
+            "action": {
+                "pass": "applications/bottle"
+            }
+        },
+        {
+            "match": {
+                "uri": "/simplestreams"
+            },
+            "action": {
+                "share": "/var/www/simplestreams$uri"
+            }
+        }
+    ],
+    "applications": {
+        "upload": {
+            "type": "python 3.6",
+            "path": "/var/www/upload_server",
+            "module": "wsgi",
+            "callable": "app"
+        },
+        "bottle": {
+            "type": "python 3.6",
+            "path": "/var/www/bottle/",
+            "home": "/var/www/bottle/venv/",
+            "module": "wsgi",
+            "callable": "app"
+        }
+    }
+}
