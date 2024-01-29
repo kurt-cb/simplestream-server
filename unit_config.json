@@ -41,15 +41,16 @@
     ],
     "applications": {
         "upload": {
-            "type": "python 3.6",
+            "type": "python 3.7",
             "path": "/var/www/upload_server",
+            "home": "/home/ubuntu/ss-venv/",
             "module": "wsgi",
             "callable": "app"
         },
         "bottle": {
-            "type": "python 3.6",
+            "type": "python 3.7",
             "path": "/var/www/bottle_test/",
-            "home": "/var/www/bottle_test/venv/",
+            "home": "/home/ubuntu/ss-venv/",
             "module": "wsgi",
             "callable": "app"
         }

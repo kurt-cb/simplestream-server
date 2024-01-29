@@ -60,7 +60,7 @@ chown ubuntu /home/ubuntu/user_config.sh
 su ubuntu -c "~/user_config.sh"
 
 # now activate the server config
-cat unit_config.json | curl -X PUT -d@- localhost:8080/config
+cat simplestream-server/unit_config.json | curl -X PUT -d@- localhost:8080/config
 
 return 0
 
