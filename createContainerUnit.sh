@@ -60,8 +60,7 @@ if [ $DIRMOUNT == 1 ]; then
    printf "uid $(id -u) 0\ngid $(id -g) 4" | lxc config set simplestream raw.idmap -
    lxc restart simplestream
    lxc config device add simplestream webdir  disk source=$(pwd) path=/opt/lxd-image-server
-   lxc config device add simplestream nginx proxy connect="tcp:127.0.0.1:8443" listen="tcp:0.0.0.0:8843"
-   lxc config device add simplestream s proxy connect="tcp:127.0.0.1:8843" listen="tcp:0.0.0.0:443"
+   lxc config device add simplestream s proxy connect="tcp:127.0.0.1:8000" listen="tcp:0.0.0.0:8000"
 else
    tar cjf $TMPDIR/files.tar.bz2 .
    lxc file push $TMPDIR/files.tar.bz2 simplestream/opt/files.tar.bz2

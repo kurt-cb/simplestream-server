@@ -1,6 +1,6 @@
-from bottle import Bottle, template
+from bottle_test.wsgi import Bottle, template
 
-app = Bottle()
+app = application = Bottle()
 
 @app.route('/hello/<name>')
 def hello(name):
