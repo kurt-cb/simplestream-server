@@ -28,9 +28,14 @@ deb-src [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx
 EOF
 
 sudo apt update
-sudo apt install $OPTIONS unit
-sudo apt install $OPTIONS unit-dev unit-jsc8 unit-jsc11 unit-perl  \
-      unit-php unit-python2.7 unit-python3.6 unit-python3.7 unit-ruby uwsgi python3-pip
+sudo apt install $OPTIONS unit unit-dev unit-python3.6
+#sudo apt install $OPTIONS unit-dev unit-jsc8 unit-jsc11 unit-perl  \
+#      unit-php unit-python2.7 unit-python3.6 unit-python3.7 unit-ruby uwsgi python3-pip
+
+cat <<EOF >/etc/default/unit
+DAEMON_ARGS=--control 127.0.0.1:8080
+EOF
+
 sudo systemctl restart unit
 
 echo "Installing debugging tools"
@@ -50,7 +55,9 @@ cp -r html /var/www
 chown -R unit:unit /var/www
 cat unit_config.json | curl -X PUT -d@- localhost:8080/config
 cd ..
-su ubuntu -c "scripts/user_config.sh"
+cp scripts/user_config.sh /home/ubuntu
+chown ubuntu /home/ubuntu/user_config.sh
+su ubuntu -c "~/user_config.sh"
 
 
 
