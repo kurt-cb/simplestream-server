@@ -27,8 +27,9 @@ deb [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org
 deb-src [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org/unit/ubuntu/ bionic unit
 EOF
 
-sudo apt update
-sudo apt install $OPTIONS unit unit-dev unit-python3.6
+apt update
+apt install $OPTIONS unit unit-dev uwsgi python3-pip \
+    python3.7-venv python3.7-dev unit-python3.7
 #sudo apt install $OPTIONS unit-dev unit-jsc8 unit-jsc11 unit-perl  \
 #      unit-php unit-python2.7 unit-python3.6 unit-python3.7 unit-ruby uwsgi python3-pip
 
@@ -53,14 +54,13 @@ cp -r bottle_test /var/www
 cp -r upload_server /var/www
 cp -r html /var/www
 chown -R unit:unit /var/www
-cat unit_config.json | curl -X PUT -d@- localhost:8080/config
-cd ..
 cp scripts/user_config.sh /home/ubuntu
+cd ..
 chown ubuntu /home/ubuntu/user_config.sh
 su ubuntu -c "~/user_config.sh"
 
-
-
+# now activate the server config
+cat unit_config.json | curl -X PUT -d@- localhost:8080/config
 
 return 0
 
