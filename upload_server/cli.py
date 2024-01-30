@@ -208,6 +208,7 @@ def serve(urlpath):
 @apt.error(403)
 @apt.error(404)
 @apt.error(405)
+@apt.error(413)
 def error_page(error):
     status = error.status
     reason = error.body

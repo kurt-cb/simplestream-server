@@ -36,8 +36,11 @@ upload_date=$(date '+%Y%m%d_%H:%M')
 dir="$properties_os/$properties_release/$properties_architecture/$properties_variant/$properties_serial"
 echo $dir
 
+ls -l
+echo curl "-Fupload=@$meta;filename=$dir/lxd.tar.xz" "$remote/"
+curl "-Fupload=@$meta;filename=$dir/lxd.tar.xz" "$remote/"
 
-curl "-Fupload=@$meta;filename=$dir/lxd.tar.xz" "$remote/images/"
-curl "-Fupload=@$squash;filename=$dir/rootfs.squashfs" "$remote/images/"
+echo curl "-Fupload=@$squash;filename=$dir/rootfs.squashfs" "$remote/"
+curl "-Fupload=@$squash;filename=$dir/rootfs.squashfs" "$remote/"
 
  
