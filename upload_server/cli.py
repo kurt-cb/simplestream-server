@@ -23,7 +23,7 @@ PROJECT_ROOT = os.path.dirname(os.path.realpath(__file__))
 bottle.TEMPLATE_PATH = [
     join(PROJECT_ROOT, 'html'),
 ]
-bottle.MEMFILE_MAX = 10 * 1024 * 1024
+bottle.MEMFILE_MAX = 10 * 1024 * 1024 * 1024
 
 BASE_DIR = PROJECT_ROOT
 ALLOW_DELETES = False
