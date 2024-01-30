@@ -8,7 +8,7 @@
     "routes": [
         {
             "match": {
-                "uri": "/"
+                "uri": "/index.html"
             },
             "action": {
                 "share": "/var/www/html$uri"
@@ -16,7 +16,7 @@
         },
         {
             "match": {
-                "uri": "/upload"
+                "uri": "/upload/*"
             },
             "action": {
                 "pass": "applications/upload"
@@ -24,7 +24,7 @@
         },
         {
             "match": {
-                "uri": "/bottle"
+                "uri": "/bottle/*"
             },
             "action": {
                 "pass": "applications/bottle"
@@ -32,7 +32,7 @@
         },
         {
             "match": {
-                "uri": "/simplestreams"
+                "uri": "/simplestreams/*"
             },
             "action": {
                 "share": "/var/www/simplestreams$uri"
@@ -44,12 +44,17 @@
             "type": "python 3.7",
             "path": "/var/www/upload_server/",
             "home": "/home/ubuntu/ss-env/",
+            "prefix": "/upload",
             "module": "wsgi",
-            "callable": "app"
+            "callable": "app",
+            "environment": {
+                "/var/www/images"
+            }
         },
         "bottle": {
             "type": "python 3.7",
             "path": "/var/www/bottle_test/",
+            "prefix": "/bottle",
             "home": "/home/ubuntu/ss-env/",
             "module": "wsgi",
             "callable": "app"

@@ -2,22 +2,23 @@
 
 # modified from https://github.com/pi314/hfs/blob/master/hfs/core.py
 
-import argparse
 import datetime
 import mimetypes
 import os
 import re
 import sys
-
+import configargparse
 from contextlib import suppress
 from os.path import isdir, join
 from shutil import rmtree
 
 import bottle
 
+apt = bottle()
+apt.install()
 PROJECT_ROOT = os.path.dirname(os.path.realpath(__file__))
 
-bottle.TEMPLATE_PATH = [
+apt.TEMPLATE_PATH = [
     join(PROJECT_ROOT, 'html'),
 ]
 
@@ -42,7 +43,7 @@ class FileItem:
         fpath = fpath if fpath else '.'
         fpath = re.sub(r'/+', '/', fpath).strip('/')
         if '/../' in fpath or fpath.startswith('../') or ('..' == fpath):
-            raise bottle.HTTPError(status=403, body='Invalid path')
+            raise app.HTTPError(status=403, body='Invalid path')
 
         fpath = '' if fpath in ['.', '..'] else fpath
 
@@ -117,24 +118,24 @@ class DirectoryItem:
 
 
 def is_user_agent_curl():
-    return bottle.request.get_header('User-Agent', default='').startswith('curl')
+    return apt.request.get_header('User-Agent', default='').startswith('curl')
 
 
 def is_client_denied(client_addr):
     return False
 
 
-@bottle.route('/', method=('GET', 'POST'))
+@apt.route('/', method=('GET', 'POST'))
 def root():
     return serve('.')
 
 
-@bottle.route('/static/<urlpath:path>')
+@apt.route('/static/<urlpath:path>')
 def static(urlpath):
-    return bottle.static_file(urlpath, root=join(PROJECT_ROOT, 'static'))
+    return apt.static_file(urlpath, root=join(PROJECT_ROOT, 'static'))
 
 
-@bottle.route('/<urlpath:path>', method=('GET', 'POST', 'DELETE'))
+@apt.route('/<urlpath:path>', method=('GET', 'POST', 'DELETE'))
 def serve(urlpath):
     target = FileItem(urlpath)
     global DEBUG
@@ -143,22 +144,22 @@ def serve(urlpath):
     if DEBUG:
         print("DEBUG: urlpath: {} -> {} -> {} ".format(urlpath, target.fpath, target.realpath))
 
-    bottle.request.get('REMOTE_ADDR')
-    if is_client_denied(bottle.request.get('REMOTE_ADDR')):
-        raise bottle.HTTPError(status=403, body='Permission denied')
+    app.request.get('REMOTE_ADDR')
+    if is_client_denied(app.request.get('REMOTE_ADDR')):
+        raise app.HTTPError(status=403, body='Permission denied')
 
-    if bottle.request.method == 'GET':
+    if app.request.method == 'GET':
         return (serve_dir if target.isdir else serve_file)(target)
 
-    elif bottle.request.method == 'POST':
+    elif app.request.method == 'POST':
         if ALLOW_CREATE_DIRS or target.isdir:
-            upload = bottle.request.files.getall('upload')
+            upload = app.request.files.getall('upload')
             if not upload:
                 # client did not provide a file
                 if DEBUG:
                     print("DEBUG: Upload: you did not a provide a file to upload - field name is 'upload'")
 
-                return bottle.redirect('/{}'.format(urlpath))
+                return app.redirect('/{}'.format(urlpath))
 
             for f in upload:
                 fpath = get_uniq_fpath(join(target.fpath, f.raw_filename))
@@ -170,7 +171,7 @@ def serve(urlpath):
                         print("DEBUG: will remove file: {}".format(fileitem.realpath))
 
                     if not ALLOW_DELETES:
-                        raise bottle.HTTPError(status=405, body='Deletion not permitted')
+                        raise app.HTTPError(status=405, body='Deletion not permitted')
 
                     os.remove(fileitem.realpath)
 
@@ -182,14 +183,14 @@ def serve(urlpath):
                     print("DEBUG: will save file: {}".format(fileitem.realpath))
                 f.save(fileitem.realpath)
 
-        return bottle.redirect('/{}'.format(urlpath))
+        return app.redirect('/{}'.format(urlpath))
 
-    elif bottle.request.method == 'DELETE':
+    elif app.request.method == 'DELETE':
         if not ALLOW_DELETES:
-            raise bottle.HTTPError(status=405, body='Deletion not permitted')
+            raise app.HTTPError(status=405, body='Deletion not permitted')
 
         elif not target.exists:
-            raise bottle.HTTPError(status=404, body='File "{}" does not exist'.format(target.fpath))
+            raise app.HTTPError(status=404, body='File "{}" does not exist'.format(target.fpath))
 
         elif target.isdir:
             with suppress(OSError):
@@ -202,16 +203,16 @@ def serve(urlpath):
             return serve_dir(target.parent)
 
 
-@bottle.error(403)
-@bottle.error(404)
-@bottle.error(405)
+@app.error(403)
+@app.error(404)
+@app.error(405)
 def error_page(error):
     status = error.status
     reason = error.body
     if isinstance(status, int):
         status = '{} {}'.format(
                 status,
-                bottle.HTTP_CODES.get(status, bottle.HTTP_CODES[500])
+                app.HTTP_CODES.get(status, app.HTTP_CODES[500])
         )
 
     if not is_user_agent_curl():
@@ -229,36 +230,36 @@ def serve_file(fileitem: FileItem):
         mimetype='application/octet-stream'
 
     global BASE_DIR
-    target_file = bottle.static_file(
+    target_file = app.static_file(
         fileitem.fpath,
         root=BASE_DIR,
         mimetype=mimetype
     )
 
     if target_file.status_code == 404:
-        raise bottle.HTTPError(status=target_file.status, body='File "{}" does not exist'.format(fileitem.fpath))
+        raise app.HTTPError(status=target_file.status, body='File "{}" does not exist'.format(fileitem.fpath))
 
     elif target_file.status_code >= 400:
-        raise bottle.HTTPError(status=target_file.status)
+        raise app.HTTPError(status=target_file.status)
 
     return target_file
 
 
 def serve_dir(fileitem: FileItem):
-    filters = bottle.request.urlparts.query.split('?')
+    filters = app.request.urlparts.query.split('?')
 
     args = {
         'ancestors_dlist': get_ancestors_dlist(fileitem),
         'curdir': fileitem.fpath,
         'flist': get_flist(fileitem, filters),
-        'host': bottle.request.urlparts.netloc,
+        'host': app.request.urlparts.netloc,
         'pipe': 'pipe' in filters,
     }
 
     if is_user_agent_curl():
-        return bottle.template('curl-listdir.html', **args)
+        return app.template('curl-listdir.html', **args)
 
-    return bottle.template('listdir.html', **args)
+    return app.template('listdir.html', **args)
 
 
 def get_flist(fileitem: FileItem, filters):
@@ -312,21 +313,28 @@ def get_uniq_fpath(filepath):
 
     return fitem.fpath
 
+def environ_or_required(key):
+    return (
+        {'default': os.environ.get(key)} if os.environ.get(key)
+        else {'required': True}
+    )
 
-def main():
+
+def parseargs():
     print("\n\nFile Upload server starting...\n\n", flush=True)
 
-    parser = argparse.ArgumentParser(
+    parser = configargparse.ArgumentParser(
         description='Simple HTTP File Server',
-        prog='upload-server')
+        prog='upload-server',
+        default_config_files=[
+            '/etc/upload_server.conf',
+            '~/.upload_server.conf']
+            )
 
-    parser.add_argument('--port',
-        help='The port this server should listen on',
-        nargs='?', type=int, default=8000)
-
+    parser.add('-c', '--my-config', required=True, is_config_file=True, help='config file path')
     parser.add_argument('--allow-delete',
         help='Allow deletes',
-        default=False, action='store_true')
+        default=True, action='store_true')
     parser.add_argument('--debug',
         help='Print debugging info',
         default=False, action='store_true')
@@ -367,7 +375,7 @@ def main():
     #bottle.run(host='0.0.0.0', port=args.port)
 
     bottle.run(
-        app=BASE, 
+        app=BASE,
         host='0.0.0.0',
         port=args.port,
         server='gunicorn',
@@ -375,7 +383,7 @@ def main():
         debug=1,
         keyfile='key.pem',
         certfile='cert.pem'
-    ) 
+    )
 
 
 if __name__ == '__main__':

@@ -43,8 +43,6 @@ echo "Installing debugging tools"
 apt-get install $OPTIONS strace curl wget netcat nano git patch
 
 git clone https://github.com/kurt-cb/simplestream-server.git
-
-
 cd simplestream-server
 git checkout unit
 
@@ -53,21 +51,36 @@ mkdir -p /var/www
 cp -r bottle_test /var/www
 cp -r upload_server /var/www
 cp -r html /var/www
+mkdir -p /var/www/simplestreams
 chown -R unit:unit /var/www
+chmod -R g+s /var/www/simplestreams
+chmod -R g+w /var/www
 cp scripts/user_config.sh /home/ubuntu
 cd ..
+
+# put ubuntu in unit group
+usermod -G adm,unit ubuntu
+chgrp unit /home/ubuntu
+chmod g+s /home/ubuntu
+
+# create venv
 chown ubuntu /home/ubuntu/user_config.sh
 su ubuntu -c "~/user_config.sh"
 
+# create service
+cp $ROOTDIR/scripts/lxd-image-server.service /etc/systemd/system
+su unit -c "/usr/local/bin/lxd-image-server --log-file STDOUT init --nginx_skip"
+
 # now activate the server config
 cat simplestream-server/unit_config.json | curl -X PUT -d@- localhost:8080/config
+
 
 return 0
 
 echo "Installing lxd-image-server"
 useradd webserver -G adm,nginx,users,ubuntu -m -r
 mkdir /var/www
-chown nginx:nginx /var/www
+chown unit:unit /var/www
 ln -s $ROOTDIR /var/www/lxd-image-server
 chmod -R g+w $ROOTDIR
 pip3 install --upgrade pip

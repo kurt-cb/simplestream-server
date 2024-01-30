@@ -1,4 +1,4 @@
-from bottle_test.wsgi import Bottle, template
-import upload_server
+from bottle import Bottle, template
+import cli
 
 app = application = Bottle()

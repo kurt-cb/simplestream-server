@@ -10,4 +10,15 @@ python get-pip.py "pip==23.3.2" "setuptools==41.0.1" "wheel==0.37.1"
 rm get-pip.py
 pip config set global.disable-pip-version-check true
 
-pip install bottle uwsgi click inotify cryptography confight
+pip install bottle uwsgi click inotify cryptography confight configargparse
+
+git clone https://github.com/kurt-cb/simplestream-server.git
+cd simplestream-server
+git checkout unit
+
+pip install lxd-image-server
+
+alias spython='sudo $(printenv VIRTUAL_ENV)/bin/python3'
+cd ..
+
+lxd-image-server --log-file STDOUT update init --nginx_skip

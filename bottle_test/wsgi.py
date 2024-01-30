@@ -7,7 +7,7 @@ app = application = Bottle()
 def hello(name):
     return template('Hello, {{name}}!', name=name)
 
-@bottle.route('/there/<name>')
+@app.route('/there/<name>')
 def there(name):
     return template('there, {{name}}!', name=name)
 
