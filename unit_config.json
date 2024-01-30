@@ -7,10 +7,18 @@
     "routes": [
         {
             "match": {
-                "uri": "/index.html"
+                "uri": "/html/*"
             },
             "action": {
                 "share": "/var/www/html$uri"
+            }
+        },
+        {
+            "match": {
+                "uri": "/"
+            },
+            "action": {
+                "share": "/var/www/html/index.html"
             }
         },
         {
@@ -58,6 +66,11 @@
             "home": "/home/ubuntu/ss-env/",
             "module": "wsgi",
             "callable": "app"
+        }
+    },
+    "settings":  {
+        "http": {
+            "log_route": true
         }
     }
 }
