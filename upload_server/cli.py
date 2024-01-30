@@ -259,9 +259,9 @@ def serve_dir(fileitem: FileItem):
     }
 
     if is_user_agent_curl():
-        return apt.template('curl-listdir.html', **args)
+        return bottle.template('curl-listdir.html', **args)
 
-    return apt.template('listdir.html', **args)
+    return bottle.template('listdir.html', **args)
 
 
 def get_flist(fileitem: FileItem, filters):
