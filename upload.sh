@@ -40,7 +40,7 @@ echo $dir
 
 ls -l
 echo curl "-Fupload=@$meta;filename=$dir/lxd.tar.xz" "$remote/"
-curl "-Fupload=@$meta;filename=$dir/lxd.tar.xz" "$remote/"
+curl "-Fupload=@$meta;filename=$dir/lxd.tar.xz" "$remote/images"
 mv $squash rootfs.squashfs
 echo curl "-Fupload=@rootfs.squashfs;filename=$dir/rootfs.squashfs" "$remote/"
-curl "-Fupload=@rootfs.squashfs;filename=$dir/rootfs.squashfs" "$remote/"
+curl "-Fupload=@rootfs.squashfs;filename=$dir/rootfs.squashfs" "$remote/images"

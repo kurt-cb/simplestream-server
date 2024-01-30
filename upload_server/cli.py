@@ -39,8 +39,6 @@ flist_filters = {
 }
 
 
-
-
 class FileItem:
     def __init__(self, fpath):
         fpath = fpath if fpath else '.'
@@ -113,11 +111,10 @@ class DirectoryItem:
         self.dpath = dpath
 
     def __add__(self, dname):
-        return DirectoryItem(dname, os.path.join(self.dpath,dname))
+        return DirectoryItem(dname, os.path.join(self.dpath, dname))
 
     def __repr__(self):
         return '<DirectoryItem: "{}">'.format(self.dpath)
-
 
 
 def is_user_agent_curl():
@@ -231,7 +228,7 @@ def error_page(error):
 def serve_file(fileitem: FileItem):
     mimetype = mimetypes.guess_type(fileitem.realpath)[0]
     if mimetype is None:
-        mimetype='application/octet-stream'
+        mimetype = 'application/octet-stream'
 
     global BASE_DIR
     target_file = bottle.static_file(
@@ -317,6 +314,7 @@ def get_uniq_fpath(filepath):
 
     return fitem.fpath
 
+
 def environ_or_required(key):
     return (
         {'default': os.environ.get(key)} if os.environ.get(key)
@@ -397,8 +395,10 @@ def main(args):
     )
     """
 
+
 def get_apt():
     return apt
+
 
 if __name__ == '__main__':
     args = parseargs()

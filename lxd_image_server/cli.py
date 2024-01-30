@@ -21,6 +21,7 @@ from lxd_image_server.tools.config import Config
 logger = logging.getLogger('lxd-image-server')
 event_queue = queue.Queue()
 
+
 def threaded(fn):
     def wrapper(*args, **kwargs):
         threading.Thread(target=fn, args=args, kwargs=kwargs).start()
@@ -59,7 +60,6 @@ def needs_update(events):
     return modified_files
 
 
-
 def config_inotify_setup(skipWatchingNonExistent: bool) -> inotify.adapters.Inotify:
     i = inotify.adapters.Inotify()
     watchedDirs = {}
@@ -68,10 +68,10 @@ def config_inotify_setup(skipWatchingNonExistent: bool) -> inotify.adapters.Inot
         if os.path.exists(p):
             if os.path.isfile(p):
                 logger.debug("Watching existing config file {}".format(p))
-                i.add_watch(p, mask= inotify.constants.IN_CLOSE_WRITE | inotify.constants.IN_DELETE)
+                i.add_watch(p, mask=inotify.constants.IN_CLOSE_WRITE | inotify.constants.IN_DELETE)
             else:
                 logger.debug("Watching existing config directory {}".format(p))
-                i.add_watch(p) # SEEME: all events?
+                i.add_watch(p)  # SEEME: all events?
         elif not skipWatchingNonExistent:
             (d, n) = os.path.split(p)
             while not os.path.exists(d):
@@ -83,8 +83,9 @@ def config_inotify_setup(skipWatchingNonExistent: bool) -> inotify.adapters.Inot
 
     return i
 
+
 @threaded
-def update_config(skipWatchingNonExistent = True):
+def update_config(skipWatchingNonExistent=True):
     i = config_inotify_setup(skipWatchingNonExistent)
     while True:
         reload = False
@@ -246,9 +247,9 @@ def watch(ctx, img_dir, streams_dir, skip_watch_config_non_existent: bool):
         logger.debug("Watching image directory {}".format(path_img_dir))
 
         i = inotify.adapters.InotifyTree(path_img_dir,
-                                        mask=(IN_ATTRIB | IN_DELETE |
-                                            IN_MOVED_FROM | IN_MOVED_TO |
-                                            IN_CLOSE_WRITE))
+                                         mask=(IN_ATTRIB | IN_DELETE |
+                                               IN_MOVED_FROM | IN_MOVED_TO |
+                                               IN_CLOSE_WRITE))
 
         events = i.event_gen(yield_nones=False, timeout_s=15)
         files_changed = needs_update(events)
