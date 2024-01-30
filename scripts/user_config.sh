@@ -16,9 +16,10 @@ git clone https://github.com/kurt-cb/simplestream-server.git
 cd simplestream-server
 git checkout unit
 
-pip install lxd-image-server
+pip install .
 
 alias spython='sudo $(printenv VIRTUAL_ENV)/bin/python3'
 cd ..
 
 lxd-image-server --log-file STDOUT update init --nginx_skip
+chown -R unit:unit /var/www/simplestreams
