@@ -204,16 +204,16 @@ def serve(urlpath):
             return serve_dir(target.parent)
 
 
-@app.error(403)
-@app.error(404)
-@app.error(405)
+@apt.error(403)
+@apt.error(404)
+@apt.error(405)
 def error_page(error):
     status = error.status
     reason = error.body
     if isinstance(status, int):
         status = '{} {}'.format(
                 status,
-                app.HTTP_CODES.get(status, app.HTTP_CODES[500])
+                apt.HTTP_CODES.get(status, apt.HTTP_CODES[500])
         )
 
     if not is_user_agent_curl():
@@ -231,36 +231,36 @@ def serve_file(fileitem: FileItem):
         mimetype='application/octet-stream'
 
     global BASE_DIR
-    target_file = app.static_file(
+    target_file = apt.static_file(
         fileitem.fpath,
         root=BASE_DIR,
         mimetype=mimetype
     )
 
     if target_file.status_code == 404:
-        raise app.HTTPError(status=target_file.status, body='File "{}" does not exist'.format(fileitem.fpath))
+        raise apt.HTTPError(status=target_file.status, body='File "{}" does not exist'.format(fileitem.fpath))
 
     elif target_file.status_code >= 400:
-        raise app.HTTPError(status=target_file.status)
+        raise apt.HTTPError(status=target_file.status)
 
     return target_file
 
 
 def serve_dir(fileitem: FileItem):
-    filters = app.request.urlparts.query.split('?')
+    filters = apt.request.urlparts.query.split('?')
 
     args = {
         'ancestors_dlist': get_ancestors_dlist(fileitem),
         'curdir': fileitem.fpath,
         'flist': get_flist(fileitem, filters),
-        'host': app.request.urlparts.netloc,
+        'host': apt.request.urlparts.netloc,
         'pipe': 'pipe' in filters,
     }
 
     if is_user_agent_curl():
-        return app.template('curl-listdir.html', **args)
+        return apt.template('curl-listdir.html', **args)
 
-    return app.template('listdir.html', **args)
+    return apt.template('listdir.html', **args)
 
 
 def get_flist(fileitem: FileItem, filters):

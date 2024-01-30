@@ -1,4 +1,4 @@
 import cli
 
 cli.parseargs()
-app=cli.app
+app=cli.apt
