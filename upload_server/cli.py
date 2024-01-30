@@ -372,8 +372,10 @@ def parseargs():
 
     print("BASE_DIR: ", BASE_DIR)
 
-    #bottle.run(host='0.0.0.0', port=args.port)
 
+def main():
+    bottle.run(host='0.0.0.0', port=args.port)
+    """
     bottle.run(
         app=BASE,
         host='0.0.0.0',
@@ -384,8 +386,10 @@ def parseargs():
         keyfile='key.pem',
         certfile='cert.pem'
     )
+    """
 
 
 if __name__ == '__main__':
+    parseargs()
     main()
 

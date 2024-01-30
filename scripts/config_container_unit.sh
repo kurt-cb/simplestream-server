@@ -69,7 +69,6 @@ su ubuntu -c "~/user_config.sh"
 
 # create service
 cp $ROOTDIR/scripts/lxd-image-server.service /etc/systemd/system
-su unit -c "/usr/local/bin/lxd-image-server --log-file STDOUT init --nginx_skip"
 
 # now activate the server config
 cat simplestream-server/unit_config.json | curl -X PUT -d@- localhost:8080/config
