@@ -22,4 +22,4 @@ alias spython='sudo $(printenv VIRTUAL_ENV)/bin/python3'
 cd ..
 
 lxd-image-server --log-file STDOUT  init --nginx_skip
-chown -R unit:unit /var/www/simplestreams
+sudo chown -R unit:unit /var/www/simplestreams
