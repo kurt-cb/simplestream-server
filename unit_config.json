@@ -56,7 +56,7 @@
                 "uri": "/logs/*"
             },
             "action": {
-                "share": "/var/www/simplestreams$uri"
+                "share": "/var/www/$uri"
             }
         }
     ],
