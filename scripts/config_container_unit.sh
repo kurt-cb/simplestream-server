@@ -49,7 +49,6 @@ git checkout unit
 mkdir -p /var/www/logs
 cp upload_server.conf /etc
 
-cp -r bottle_test /var/www
 cp -r upload_server /var/www
 cp -r html /var/www
 mkdir -p /var/www/simplestreams
