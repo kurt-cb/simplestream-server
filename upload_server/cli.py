@@ -23,6 +23,7 @@ PROJECT_ROOT = os.path.dirname(os.path.realpath(__file__))
 bottle.TEMPLATE_PATH = [
     join(PROJECT_ROOT, 'html'),
 ]
+bottle.MEMFILE_MAX = 10 * 1024 * 1024
 
 BASE_DIR = PROJECT_ROOT
 ALLOW_DELETES = False
@@ -45,7 +46,7 @@ class FileItem:
         fpath = fpath if fpath else '.'
         fpath = re.sub(r'/+', '/', fpath).strip('/')
         if '/../' in fpath or fpath.startswith('../') or ('..' == fpath):
-            raise app.HTTPError(status=403, body='Invalid path')
+            raise bottle.HTTPError(status=403, body='Invalid path')
 
         fpath = '' if fpath in ['.', '..'] else fpath
 
@@ -148,7 +149,7 @@ def serve(urlpath):
 
     bottle.request.get('REMOTE_ADDR')
     if is_client_denied(bottle.request.get('REMOTE_ADDR')):
-        raise apt.HTTPError(status=403, body='Permission denied')
+        raise bottle.HTTPError(status=403, body='Permission denied')
 
     if bottle.request.method == 'GET':
         return (serve_dir if target.isdir else serve_file)(target)
@@ -173,7 +174,7 @@ def serve(urlpath):
                         print("DEBUG: will remove file: {}".format(fileitem.realpath))
 
                     if not ALLOW_DELETES:
-                        raise apt.HTTPError(status=405, body='Deletion not permitted')
+                        raise bottle.HTTPError(status=405, body='Deletion not permitted')
 
                     os.remove(fileitem.realpath)
 
@@ -189,10 +190,10 @@ def serve(urlpath):
 
     elif bottle.request.method == 'DELETE':
         if not ALLOW_DELETES:
-            raise apt.HTTPError(status=405, body='Deletion not permitted')
+            raise bottle.HTTPError(status=405, body='Deletion not permitted')
 
         elif not target.exists:
-            raise apt.HTTPError(status=404, body='File "{}" does not exist'.format(target.fpath))
+            raise bottle.HTTPError(status=404, body='File "{}" does not exist'.format(target.fpath))
 
         elif target.isdir:
             with suppress(OSError):
@@ -215,7 +216,7 @@ def error_page(error):
     if isinstance(status, int):
         status = '{} {}'.format(
                 status,
-                apt.HTTP_CODES.get(status, apt.HTTP_CODES[500])
+                bottle.HTTP_CODES.get(status, bottle.HTTP_CODES[500])
         )
 
     if not is_user_agent_curl():
