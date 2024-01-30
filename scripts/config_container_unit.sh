@@ -70,6 +70,8 @@ su ubuntu -c "~/user_config.sh"
 
 # create service
 cp $ROOTDIR/scripts/lxd-image-server.service /etc/systemd/system
+systemctl enable lxd-image-server
+systemctl start lxd-image-server
 
 # configure certificate bundle
 cat $ROOTDIR/cert.pem $ROOTDIR/key.pem >bundle.pem
