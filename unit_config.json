@@ -10,7 +10,7 @@
                 "uri": "/html/*"
             },
             "action": {
-                "share": "/var/www/html$uri"
+                "share": "/var/www/$uri"
             }
         },
         {
@@ -68,6 +68,7 @@
             "callable": "app"
         }
     },
+    "access_log": "/var/log/access.log",
     "settings":  {
         "http": {
             "log_route": true
