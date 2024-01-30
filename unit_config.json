@@ -42,6 +42,7 @@
         "upload": {
             "type": "python 3.7",
             "path": "/home/ubuntu/simplestream-server/upload_server/",
+            "working_directory": "/var/www/simplestreams/images",
             "home": "/home/ubuntu/ss-env/",
             "prefix": "/upload",
             "module": "wsgi",

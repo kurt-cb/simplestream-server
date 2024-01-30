@@ -172,7 +172,7 @@ def serve(urlpath):
                         print("DEBUG: will remove file: {}".format(fileitem.realpath))
 
                     if not ALLOW_DELETES:
-                        raise app.HTTPError(status=405, body='Deletion not permitted')
+                        raise apt.HTTPError(status=405, body='Deletion not permitted')
 
                     os.remove(fileitem.realpath)
 
@@ -184,14 +184,14 @@ def serve(urlpath):
                     print("DEBUG: will save file: {}".format(fileitem.realpath))
                 f.save(fileitem.realpath)
 
-        return app.redirect('/{}'.format(urlpath))
+        return apt.redirect('/{}'.format(urlpath))
 
-    elif app.request.method == 'DELETE':
+    elif apt.request.method == 'DELETE':
         if not ALLOW_DELETES:
-            raise app.HTTPError(status=405, body='Deletion not permitted')
+            raise apt.HTTPError(status=405, body='Deletion not permitted')
 
         elif not target.exists:
-            raise app.HTTPError(status=404, body='File "{}" does not exist'.format(target.fpath))
+            raise apt.HTTPError(status=404, body='File "{}" does not exist'.format(target.fpath))
 
         elif target.isdir:
             with suppress(OSError):
