@@ -9,7 +9,7 @@ from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
 import click
 import inotify.adapters
-from inotify.constants import (IN_ATTRIB, IN_DELETE, IN_MOVED_FROM,
+from inotify.constants import (IN_ATTRIB, IN_DELETE, IN_MOVED_FROM, IN_CREATE,
                                IN_MOVED_TO, IN_CLOSE_WRITE)
 from lxd_image_server.simplestreams.images import Images
 from lxd_image_server.tools.cert import generate_cert
@@ -49,9 +49,10 @@ def configure_log(log_file, verbose=False):
 def needs_update(events):
     modified_files = []
     for event in list(events):
+        logger.debug("needs_update - event %s", event)
         if re.match('\d{8}_\d{2}:\d{2}', event[3]) or \
             any(k in event[1]
-                for k in ('IN_MOVED_FROM', 'IN_MOVED_TO',
+                for k in ('IN_CREATE', 'IN_MOVED_FROM', 'IN_MOVED_TO',
                           'IN_DELETE', 'IN_CLOSE_WRITE')):
             logger.debug('Event: PATH=[{}] FILENAME=[{}] EVENT_TYPES={}'
                          .format(event[2], event[3], event[1]))
@@ -90,6 +91,7 @@ def update_config(skipWatchingNonExistent=True):
     while True:
         reload = False
         for event in i.event_gen(yield_nones=False):
+            logger.debug("needs_config - event %s", event)
             (_, mask, dir, file) = event
             fp = os.path.join(dir, file).rstrip(os.path.sep)
             for p in Config.paths:
@@ -247,7 +249,7 @@ def watch(ctx, img_dir, streams_dir, skip_watch_config_non_existent: bool):
         logger.debug("Watching image directory {}".format(path_img_dir))
 
         i = inotify.adapters.InotifyTree(path_img_dir,
-                                         mask=(IN_ATTRIB | IN_DELETE |
+                                         mask=(IN_ATTRIB | IN_DELETE | IN_CREATE |
                                                IN_MOVED_FROM | IN_MOVED_TO |
                                                IN_CLOSE_WRITE))
 
