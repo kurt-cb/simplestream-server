@@ -88,7 +88,7 @@
     "settings":  {
         "http": {
             "log_route": true,
-            "max_body_size": "10737418240"
+            "max_body_size": 10737418240
         }
     }
 }
