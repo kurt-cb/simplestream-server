@@ -161,7 +161,7 @@ def serve(urlpath):
                 if DEBUG:
                     print("DEBUG: Upload: you did not a provide a file to upload - field name is 'upload'")
 
-                return apt.redirect('/{}'.format(urlpath))
+                return bottle.redirect('/{}'.format(urlpath))
 
             for f in upload:
                 fpath = get_uniq_fpath(join(target.fpath, f.raw_filename))
@@ -185,7 +185,7 @@ def serve(urlpath):
                     print("DEBUG: will save file: {}".format(fileitem.realpath))
                 f.save(fileitem.realpath)
 
-        return apt.redirect('/{}'.format(urlpath))
+        return bottle.redirect('/{}'.format(urlpath))
 
     elif bottle.request.method == 'DELETE':
         if not ALLOW_DELETES:
