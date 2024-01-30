@@ -1,4 +1,4 @@
 import cli
 
-app = application = Bottle()
 cli.parseargs()
+app=cli.app
