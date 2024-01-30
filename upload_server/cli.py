@@ -13,9 +13,10 @@ from os.path import isdir, join
 from shutil import rmtree
 
 import bottle
+from bottle import Bottle
 
-apt = bottle()
-apt.install()
+apt = Bottle()
+
 PROJECT_ROOT = os.path.dirname(os.path.realpath(__file__))
 
 apt.TEMPLATE_PATH = [
@@ -371,10 +372,11 @@ def parseargs():
             sys.exit(1)
 
     print("BASE_DIR: ", BASE_DIR)
+    return args
 
 
-def main():
-    bottle.run(host='0.0.0.0', port=args.port)
+def main(args):
+    bottle.run(app=apt, host='0.0.0.0', port=args.port)
     """
     bottle.run(
         app=BASE,
@@ -390,6 +392,6 @@ def main():
 
 
 if __name__ == '__main__':
-    parseargs()
-    main()
+    args = parseargs()
+    main(args)
 
