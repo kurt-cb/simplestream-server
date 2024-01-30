@@ -4,14 +4,9 @@ import re
 from setuptools import setup, find_packages
 
 
-def get_version_from_debian_changelog():
-    with io.open('debian/changelog', encoding='utf8') as stream:
-        return re.search(r'\((.+)\)', next(stream)).group(1)
-
-
 setup(
     name='lxd-image-server',
-    version=get_version_from_debian_changelog(),
+    version='0.1",
     license='Apache License 2.0',
     author='Avature',
     author_email='devops@avature.net',
