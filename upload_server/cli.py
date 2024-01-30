@@ -20,7 +20,7 @@ bottle.debug(True)
 
 PROJECT_ROOT = os.path.dirname(os.path.realpath(__file__))
 
-apt.TEMPLATE_PATH = [
+bottle.TEMPLATE_PATH = [
     join(PROJECT_ROOT, 'html'),
 ]
 
@@ -134,7 +134,7 @@ def root():
 
 @apt.route('/static/<urlpath:path>')
 def static(urlpath):
-    return apt.static_file(urlpath, root=join(PROJECT_ROOT, 'static'))
+    return bottle.static_file(urlpath, root=join(PROJECT_ROOT, 'static'))
 
 
 @apt.route('/<urlpath:path>', method=('GET', 'POST', 'DELETE'))
@@ -232,17 +232,17 @@ def serve_file(fileitem: FileItem):
         mimetype='application/octet-stream'
 
     global BASE_DIR
-    target_file = apt.static_file(
+    target_file = bottle.static_file(
         fileitem.fpath,
         root=BASE_DIR,
         mimetype=mimetype
     )
 
     if target_file.status_code == 404:
-        raise apt.HTTPError(status=target_file.status, body='File "{}" does not exist'.format(fileitem.fpath))
+        raise bottle.HTTPError(status=target_file.status, body='File "{}" does not exist'.format(fileitem.fpath))
 
     elif target_file.status_code >= 400:
-        raise apt.HTTPError(status=target_file.status)
+        raise bottle.HTTPError(status=target_file.status)
 
     return target_file
 
