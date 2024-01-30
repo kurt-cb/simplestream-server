@@ -53,7 +53,7 @@
         },
         {
             "match": {
-                "uri": "/simplestreams/*"
+                "uri": "/streams/*"
             },
             "action": {
                 "share": "/var/www/simplestreams$uri"

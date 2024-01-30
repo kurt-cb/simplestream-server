@@ -39,9 +39,6 @@ echo $dir
 ls -l
 echo curl "-Fupload=@$meta;filename=$dir/lxd.tar.xz" "$remote/"
 curl -v "-Fupload=@$meta;filename=$dir/lxd.tar.xz" "$remote/"
-sleep 10
 mv $squash rootfs.squashfs
 echo curl "-Fupload=@rootfs.squashfs;filename=$dir/rootfs.squashfs" "$remote/"
 curl -v "-Fupload=@rootfs.squashfs;filename=$dir/rootfs.squashfs" "$remote/"
-
- 
