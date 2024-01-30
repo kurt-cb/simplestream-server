@@ -16,6 +16,7 @@ import bottle
 from bottle import Bottle
 
 apt = Bottle()
+bottle.debug(True)
 
 PROJECT_ROOT = os.path.dirname(os.path.realpath(__file__))
 
