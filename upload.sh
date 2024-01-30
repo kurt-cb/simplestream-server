@@ -1,5 +1,6 @@
 MYTMPDIR="$(mktemp -d)"
 trap 'rm -rf -- "$MYTMPDIR"' EXIT
+set -e
 
 function parse_yaml {
    local prefix=$2
@@ -19,6 +20,7 @@ function parse_yaml {
 }
 
 cd $MYTMPDIR
+lxc image copy images:$1 local: --alias $1 --public
 lxc image export $1
 
 squash=$(ls *squashfs)
@@ -38,7 +40,7 @@ echo $dir
 
 ls -l
 echo curl "-Fupload=@$meta;filename=$dir/lxd.tar.xz" "$remote/"
-curl -v "-Fupload=@$meta;filename=$dir/lxd.tar.xz" "$remote/"
+curl "-Fupload=@$meta;filename=$dir/lxd.tar.xz" "$remote/"
 mv $squash rootfs.squashfs
 echo curl "-Fupload=@rootfs.squashfs;filename=$dir/rootfs.squashfs" "$remote/"
-curl -v "-Fupload=@rootfs.squashfs;filename=$dir/rootfs.squashfs" "$remote/"
+curl "-Fupload=@rootfs.squashfs;filename=$dir/rootfs.squashfs" "$remote/"

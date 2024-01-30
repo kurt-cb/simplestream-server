@@ -252,6 +252,7 @@ def watch(ctx, img_dir, streams_dir, skip_watch_config_non_existent: bool):
         events = i.event_gen(yield_nones=False, timeout_s=15)
         files_changed = needs_update(events)
         if files_changed:
+            logger.debug("Files changed {}".format(files_changed))
             event_queue.put(files_changed)
 
 
