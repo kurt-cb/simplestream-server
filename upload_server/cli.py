@@ -333,18 +333,22 @@ def parseargs():
             )
 
     parser.add('-c', '--my-config', required=True, is_config_file=True, help='config file path')
-    parser.add_argument('--allow-delete',
+    parser.add_argument(
+        '--allow-delete',
         help='Allow deletes',
         default=True, action='store_true')
-    parser.add_argument('--debug',
+    parser.add_argument(
+        '--debug',
         help='Print debugging info',
         default=False, action='store_true')
 
-    parser.add_argument('--allow-overwrite',
+    parser.add_argument(
+        '--allow-overwrite',
         help='Allow overwrites',
         default=False, action='store_true')
 
-    parser.add_argument('--base-dir',
+    parser.add_argument(
+        '--base-dir',
         help='Base directory to serve',
         type=str)
 

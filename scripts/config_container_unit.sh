@@ -47,6 +47,7 @@ cd simplestream-server
 git checkout unit
 
 mkdir -p /var/www
+cp upload_server.conf /etc
 
 cp -r bottle_test /var/www
 cp -r upload_server /var/www

@@ -47,7 +47,7 @@
             "module": "wsgi",
             "callable": "app",
             "environment": {
-                "/var/www/images"
+                "IMAGE_DIR": "/var/www/simplestreams/images"
             }
         },
         "bottle": {
