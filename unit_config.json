@@ -45,14 +45,6 @@
         },
         {
             "match": {
-                "uri": "/bottle/*"
-            },
-            "action": {
-                "pass": "applications/bottle"
-            }
-        },
-        {
-            "match": {
                 "uri": "/streams/*"
             },
             "action": {
@@ -69,22 +61,11 @@
             "prefix": "/upload",
             "module": "wsgi",
             "callable": "app",
-            "environment": {
-                "IMAGE_DIR": "/var/www/simplestreams/images"
-            },
-            "stdout": "/var/log/upload.log",
-            "stderr": "/var/log/upload.err"
-        },
-        "bottle": {
-            "type": "python 3.7",
-            "path": "/home/ubuntu/simplestream-server/bottle_test",
-            "prefix": "/bottle",
-            "home": "/home/ubuntu/ss-env/",
-            "module": "wsgi",
-            "callable": "app"
+            "stdout": "/var/www/logs/upload.log",
+            "stderr": "/var/www/logs/upload.err"
         }
     },
-    "access_log": "/var/log/access.log",
+    "access_log": "/var/www/logs/access.log",
     "settings":  {
         "http": {
             "log_route": true,

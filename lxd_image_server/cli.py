@@ -241,14 +241,15 @@ def watch(ctx, img_dir, streams_dir, skip_watch_config_non_existent: bool):
     # Also, race condition on calling MirrorManager.update_mirror_list() in both threads.
     update_config(skip_watch_config_non_existent)
     update_metadata(path_img_dir, path_streams_dir)
-    logger.debug("Watching image directory {}".format(path_img_dir))
-
-    i = inotify.adapters.InotifyTree(path_img_dir,
-                                     mask=(IN_ATTRIB | IN_DELETE |
-                                           IN_MOVED_FROM | IN_MOVED_TO |
-                                           IN_CLOSE_WRITE))
 
     while True:
+        logger.debug("Watching image directory {}".format(path_img_dir))
+
+        i = inotify.adapters.InotifyTree(path_img_dir,
+                                        mask=(IN_ATTRIB | IN_DELETE |
+                                            IN_MOVED_FROM | IN_MOVED_TO |
+                                            IN_CLOSE_WRITE))
+
         events = i.event_gen(yield_nones=False, timeout_s=15)
         files_changed = needs_update(events)
         if files_changed:

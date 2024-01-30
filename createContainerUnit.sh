@@ -69,4 +69,9 @@ else
 fi
 # configure the container with nginx and install the python code
 lxc exec simplestream -- bash -c /opt/lxd-image-server/scripts/config_container_unit.sh
-echo run this command to open port on host:\n  lxc config device add simplestream s proxy connect="tcp:127.0.0.1:8443" listen="tcp:0.0.0.0:8443"
+cat <<EOF
+echo run this command to open port on host:
+
+lxc config device add simplestream http proxy connect="tcp:127.0.0.1:8443" listen="tcp:0.0.0.0:8443"
+lxc config device add simplestream https proxy connect="tcp:127.0.0.1:8000" listen="tcp:0.0.0.0:8000"
+EOF

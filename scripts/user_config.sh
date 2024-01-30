@@ -1,3 +1,8 @@
+#!/bin/bash
+
+# This script is used to configure a virtual environment in user space during container setup
+# it is called in the context of the default user
+
 set -x
 set -e
 
