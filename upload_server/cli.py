@@ -119,7 +119,7 @@ class DirectoryItem:
 
 
 def is_user_agent_curl():
-    return apt.request.get_header('User-Agent', default='').startswith('curl')
+    return bottle.request.get_header('User-Agent', default='').startswith('curl')
 
 
 def is_client_denied(client_addr):
@@ -145,16 +145,16 @@ def serve(urlpath):
     if DEBUG:
         print("DEBUG: urlpath: {} -> {} -> {} ".format(urlpath, target.fpath, target.realpath))
 
-    apt.request.get('REMOTE_ADDR')
-    if is_client_denied(apt.request.get('REMOTE_ADDR')):
+    bottle.request.get('REMOTE_ADDR')
+    if is_client_denied(bottle.request.get('REMOTE_ADDR')):
         raise apt.HTTPError(status=403, body='Permission denied')
 
-    if apt.request.method == 'GET':
+    if bottle.request.method == 'GET':
         return (serve_dir if target.isdir else serve_file)(target)
 
-    elif apt.request.method == 'POST':
+    elif bottle.request.method == 'POST':
         if ALLOW_CREATE_DIRS or target.isdir:
-            upload = apt.request.files.getall('upload')
+            upload = bottle.request.files.getall('upload')
             if not upload:
                 # client did not provide a file
                 if DEBUG:
@@ -186,7 +186,7 @@ def serve(urlpath):
 
         return apt.redirect('/{}'.format(urlpath))
 
-    elif apt.request.method == 'DELETE':
+    elif bottle.request.method == 'DELETE':
         if not ALLOW_DELETES:
             raise apt.HTTPError(status=405, body='Deletion not permitted')
 
@@ -247,13 +247,13 @@ def serve_file(fileitem: FileItem):
 
 
 def serve_dir(fileitem: FileItem):
-    filters = apt.request.urlparts.query.split('?')
+    filters = bottle.request.urlparts.query.split('?')
 
     args = {
         'ancestors_dlist': get_ancestors_dlist(fileitem),
         'curdir': fileitem.fpath,
         'flist': get_flist(fileitem, filters),
-        'host': apt.request.urlparts.netloc,
+        'host': bottle.request.urlparts.netloc,
         'pipe': 'pipe' in filters,
     }
 
