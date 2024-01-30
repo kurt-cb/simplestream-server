@@ -50,6 +50,14 @@
             "action": {
                 "share": "/var/www/simplestreams$uri"
             }
+        },
+        {
+            "match": {
+                "uri": "/logs/*"
+            },
+            "action": {
+                "share": "/var/www/simplestreams$uri"
+            }
         }
     ],
     "applications": {
