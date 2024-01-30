@@ -145,22 +145,22 @@ def serve(urlpath):
     if DEBUG:
         print("DEBUG: urlpath: {} -> {} -> {} ".format(urlpath, target.fpath, target.realpath))
 
-    app.request.get('REMOTE_ADDR')
-    if is_client_denied(app.request.get('REMOTE_ADDR')):
-        raise app.HTTPError(status=403, body='Permission denied')
+    apt.request.get('REMOTE_ADDR')
+    if is_client_denied(apt.request.get('REMOTE_ADDR')):
+        raise apt.HTTPError(status=403, body='Permission denied')
 
-    if app.request.method == 'GET':
+    if apt.request.method == 'GET':
         return (serve_dir if target.isdir else serve_file)(target)
 
-    elif app.request.method == 'POST':
+    elif apt.request.method == 'POST':
         if ALLOW_CREATE_DIRS or target.isdir:
-            upload = app.request.files.getall('upload')
+            upload = apt.request.files.getall('upload')
             if not upload:
                 # client did not provide a file
                 if DEBUG:
                     print("DEBUG: Upload: you did not a provide a file to upload - field name is 'upload'")
 
-                return app.redirect('/{}'.format(urlpath))
+                return apt.redirect('/{}'.format(urlpath))
 
             for f in upload:
                 fpath = get_uniq_fpath(join(target.fpath, f.raw_filename))
