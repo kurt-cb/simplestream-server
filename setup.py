@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='lxd-image-server',
-    version='0.1",
+    version='0.1',
     license='Apache License 2.0',
     author='Avature',
     author_email='devops@avature.net',
