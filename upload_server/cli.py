@@ -332,7 +332,7 @@ def parseargs():
             '~/.upload_server.conf']
             )
 
-    parser.add('-c', '--my-config', required=True, is_config_file=True, help='config file path')
+    parser.add('-c', '--my-config', default="/etc/upload_server.conf", is_config_file=True, help='config file path')
     parser.add_argument(
         '--allow-delete',
         help='Allow deletes',
