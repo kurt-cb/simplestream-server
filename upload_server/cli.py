@@ -394,6 +394,8 @@ def main(args):
     )
     """
 
+def get_apt():
+    return apt
 
 if __name__ == '__main__':
     args = parseargs()
