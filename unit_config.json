@@ -71,7 +71,9 @@
             "callable": "app",
             "environment": {
                 "IMAGE_DIR": "/var/www/simplestreams/images"
-            }
+            },
+            "stdout": "/var/log/upload.log",
+            "stderr": "/var/log/upload.err"
         },
         "bottle": {
             "type": "python 3.7",
