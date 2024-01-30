@@ -21,5 +21,5 @@ pip install .
 alias spython='sudo $(printenv VIRTUAL_ENV)/bin/python3'
 cd ..
 
-lxd-image-server --log-file STDOUT update init --nginx_skip
+lxd-image-server --log-file STDOUT  init --nginx_skip
 chown -R unit:unit /var/www/simplestreams
