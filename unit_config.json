@@ -87,7 +87,8 @@
     "access_log": "/var/log/access.log",
     "settings":  {
         "http": {
-            "log_route": true
+            "log_route": true,
+            "max_body_size": "10G"
         }
     }
 }
