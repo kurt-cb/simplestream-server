@@ -41,7 +41,7 @@
     "applications": {
         "upload": {
             "type": "python 3.7",
-            "path": "/user/home/simplestream-server/upload_server/",
+            "path": "/home/ubuntu/simplestream-server/upload_server/",
             "home": "/home/ubuntu/ss-env/",
             "prefix": "/upload",
             "module": "wsgi",
@@ -52,7 +52,7 @@
         },
         "bottle": {
             "type": "python 3.7",
-            "path": "/user/home/simplestream-server/bottle_test",
+            "path": "/home/ubuntu/simplestream-server/bottle_test",
             "prefix": "/bottle",
             "home": "/home/ubuntu/ss-env/",
             "module": "wsgi",
