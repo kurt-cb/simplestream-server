@@ -2,6 +2,12 @@
     "listeners": {
             "*:8000": {
                 "pass": "routes"
+            },
+            "*:8443": {
+                "pass": "routes",
+                "tls": {
+                    "certificate": "bundle"
+                }
             }
     },
     "routes": [
@@ -19,6 +25,14 @@
             },
             "action": {
                 "share": "/var/www/html/index.html"
+            }
+        },
+        {
+            "match": {
+                "uri": "/cert.crt"
+            },
+            "action": {
+                "share": "/opt/lxd-image-server/cert.pem"
             }
         },
         {

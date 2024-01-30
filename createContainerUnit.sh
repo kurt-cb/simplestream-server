@@ -50,7 +50,7 @@ if [ ! -f key.pem ]; then
       -keyout key.pem -out cert.pem
 fi
 
-lxc launch images:ubuntu/18.04 simplestream
+lxc launch images:ubuntu/18.04 simplestream $CONTAINER_OPTS
 TMPDIR=$(mktemp -d)
 DIRMOUNT=0
 

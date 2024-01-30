@@ -71,9 +71,12 @@ su ubuntu -c "~/user_config.sh"
 # create service
 cp $ROOTDIR/scripts/lxd-image-server.service /etc/systemd/system
 
+# configure certificate bundle
+cat $ROOTDIR/cert.pem $ROOTDIR/key.pem >bundle.pem
+curl -X PUT --data-binary @bundle.pem localhost:8080/certificates/bundle
+
 # now activate the server config
 cat simplestream-server/unit_config.json | curl -X PUT -d@- localhost:8080/config
-
 
 return 0
 
