@@ -19,9 +19,34 @@ function parse_yaml {
    }'
 }
 
+
+IMAGE=$1
+REMOTE=$2/upload
+DOWNLOAD=$3
+
+if [ "$2" == "" ]; then
+   echo Usage: ./upload.sh {alias} {simplestream_server} {download}
+   echo 
+   echo Example: ./upload.sh ubuntu/bionic http://localhost:8000
+   echo  This will get the local:ubuntu/bionic image and post it
+   echo  to the simplestreams server
+   echo
+   echo if you want to download from an upstream server to local:
+   echo first, then use the last argument to specify the upstream
+   echo server.
+   echo
+   echo Example: ./upload.sh ubuntu/bionic http://localhost:8000 images:
+   echo  This will copy the image to the local store, then perform
+   echo  the upload
+   echo
+   exit 1
+fi
 cd $MYTMPDIR
-lxc image copy images:$1 local: --alias $1 --public
-lxc image export $1
+
+if [ "$DOWNLOAD" != "" ]; then
+   lxc image copy ${DOWNLOAD}${IMAGE} local: --copy-aliases --public
+fi
+lxc image export ${IMAGE}
 
 squash=$(ls *squashfs)
 meta=$(ls meta*)
@@ -31,7 +56,7 @@ eval $(parse_yaml metadata.yaml)
 
 
 box=default
-remote=http://localhost:8000/upload
+
 # you MUST obey the date format
 upload_date=$(date '+%Y%m%d_%H:%M')
 
@@ -39,8 +64,12 @@ dir="$properties_os/$properties_release/$properties_architecture/$properties_var
 echo $dir
 
 ls -l
-echo curl "-Fupload=@$meta;filename=$dir/lxd.tar.xz" "$remote/"
-curl "-Fupload=@$meta;filename=$dir/lxd.tar.xz" "$remote/images"
+echo curl "-Fupload=@$meta;filename=$dir/lxd.tar.xz" "${REMOTE}/images"
+curl "-Fupload=@$meta;filename=$dir/lxd.tar.xz" "${REMOTE}/images"
 mv $squash rootfs.squashfs
-echo curl "-Fupload=@rootfs.squashfs;filename=$dir/rootfs.squashfs" "$remote/"
-curl "-Fupload=@rootfs.squashfs;filename=$dir/rootfs.squashfs" "$remote/images"
+echo curl "-Fupload=@rootfs.squashfs;filename=$dir/rootfs.squashfs" "${REMOTE}/images"
+curl "-Fupload=@rootfs.squashfs;filename=$dir/rootfs.squashfs" "${REMOTE}/images"
+
+# note, trap above will delete the temp directory
+
+echo Success: use "lxd image list {server}" to see the new image
