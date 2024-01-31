@@ -8,6 +8,12 @@ import threading
 from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
 import click
+import dbus
+import dbus.service
+import dbus.mainloop.glib
+
+from gi.repository import GLib
+
 import inotify.adapters
 from inotify.constants import (IN_ATTRIB, IN_DELETE, IN_MOVED_FROM, IN_CREATE,
                                IN_MOVED_TO, IN_CLOSE_WRITE)
@@ -220,6 +226,74 @@ def init(ctx, root_dir, ssl_dir, ssl_skip, nginx_skip):
 
         fix_permissions(img_dir)
         fix_permissions(streams_dir)
+
+
+class DbusService(dbus.service.Object):
+
+    def __init__(self, handler):
+        self._handler = handler
+
+    def run(self):
+        dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
+        bus_name = dbus.service.BusName("org.simplestream.service", dbus.SessionBus())
+        dbus.service.Object.__init__(self, bus_name, "/org/simplestream/service")
+
+        print("Service running...")
+        self._loop = GLib.MainLoop()
+        self._loop.run()
+        print("Service stopped")
+
+    @dbus.service.method("org.simplestream.service.Message", in_signature='', out_signature='s')
+    def file_update(self, name):
+        print("  sending message")
+        self._handler(path=name)
+        return "ok"
+
+    @dbus.service.method("org.simplestream.service.Quit", in_signature='', out_signature='')
+    def quit(self):
+        print("  shutting down")
+        self._loop.quit()
+
+
+@cli.command()
+@click.option('--img_dir', default='/var/www/simplestreams/images',
+              show_default=True,
+              type=click.Path(exists=True, file_okay=False,
+                              resolve_path=True))
+@click.option('--streams_dir', default='/var/www/simplestreams/streams/v1',
+              type=click.Path(exists=True, file_okay=False,
+                              resolve_path=True), show_default=True)
+@click.pass_context
+def dbus_server(ctx, img_dir, streams_dir, skip_watch_config_non_existent: bool):
+
+    def msg_handler(*args, **keywords):
+        try:
+            msg = str(keywords['path'])
+
+            logger.info("DBus message: %s", msg)
+            logger.info('Updating server')
+
+            img_dirp = Path(img_dir).expanduser().resolve()
+            streams_dirp = Path(streams_dir).expanduser().resolve()
+
+            images = Images(str(Path(streams_dirp).resolve()), rebuild=True, logger=logger)
+
+            # Generate a fake event to update all tree
+            fake_events = [
+                (None, ['IN_ISDIR', 'IN_CREATE'],
+                    str(img_dirp.parent), str(img_dirp.name))
+            ]
+            operations = Operations(fake_events, str(img_dir))
+            images.update(operations.ops)
+            images.save()
+
+            logger.info('Server updated')
+
+        except BaseException as e:
+            logger.error('Execption %s', e)
+            pass
+
+    DbusService(msg_handler).run()
 
 
 @cli.command()

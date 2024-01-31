@@ -13,4 +13,4 @@ StandardOutput=journal+console
 Environment="LC_ALL=C.UTF-8"
 Environment="LANG=C.UTF-8"
 
-ExecStart=/home/ubuntu/ss-env/bin/lxd-image-server --verbose --log-file /var/www/logs/lxd-image-server.log watch --skip-watch-config-non-existent
+ExecStart=/home/ubuntu/ss-env/bin/lxd-image-server --verbose --log-file /var/www/logs/lxd-image-server.log dbus_server
