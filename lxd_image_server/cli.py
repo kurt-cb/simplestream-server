@@ -257,13 +257,13 @@ class UpdateService(rpyc.Service):
               type=click.Path(exists=True, file_okay=False,
                               resolve_path=True), show_default=True)
 @click.pass_context
-def dbus_server(ctx, img_dir, streams_dir):
+def rpc_server(ctx, img_dir, streams_dir):
 
     def msg_handler(*args, **keywords):
         try:
             msg = str(keywords['path'])
 
-            logger.info("DBus message: %s", msg)
+            logger.info("RPC message: %s", msg)
             logger.info('Updating server')
 
             img_dirp = Path(img_dir).expanduser().resolve()
