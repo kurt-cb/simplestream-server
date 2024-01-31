@@ -5,6 +5,7 @@
 
 set -x
 set -e
+PASSWORD="$1"
 
 cd ~
 python3.7 -m pip install virtualenv==20.14.1
@@ -29,3 +30,30 @@ cd ..
 
 lxd-image-server --log-file STDOUT  init --nginx_skip
 sudo chown -R unit:unit /var/www/simplestreams
+
+cat <<EOF | lxd init --preseed
+config:
+  core.https_address: '[::]:8001'
+  core.trust_password: ${PASSWORD}
+  images.auto_update_interval: "0"
+networks: []
+storage_pools:
+- config: {}
+  description: ""
+  name: default
+  driver: dir
+profiles:
+- config:
+    security.privileged: "true"
+  description: ""
+  devices:
+    root:
+      path: /
+      pool: default
+      type: disk
+  name: default
+cluster: null
+EOF
+
+# now generate client certificate for local comms
+lxd remote add local_http https://localhost:8001 --password ${PASSWORD} --accept-certificate
