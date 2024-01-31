@@ -264,7 +264,7 @@ class DbusService(dbus.service.Object):
               type=click.Path(exists=True, file_okay=False,
                               resolve_path=True), show_default=True)
 @click.pass_context
-def dbus_server(ctx, img_dir, streams_dir, skip_watch_config_non_existent: bool):
+def dbus_server(ctx, img_dir, streams_dir):
 
     def msg_handler(*args, **keywords):
         try:

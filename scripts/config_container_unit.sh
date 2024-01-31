@@ -1,3 +1,16 @@
+#!/bin/bash
+
+#
+# this script runs inside of a newly created ubuntu 18.04 image
+# and installs everything to get unit (nginx) and the lxd simplestreams
+# server running
+# Part of the initialization is in userland (ubuntu user) and
+# configures a user based python venv to run the python code
+# in this package
+#
+# venv location: /home/ubuntu/ss-env
+#
+
 set -x
 
 ROOTDIR=/opt/lxd-image-server

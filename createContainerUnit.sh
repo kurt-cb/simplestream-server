@@ -1,4 +1,9 @@
 #!/bin/bash
+
+# this script is used to create a lxd container
+# that encorporates several services provided
+# by nginx's unit framework and python
+
 set -x
 set -e
 SERVER=$(uname -n)
@@ -68,7 +73,9 @@ else
    lxc exec simplestream -- bash -c "cd /opt;mkdir -p lxd-image-server;cd lxd-image-server; tar xf  ../files.tar.bz2 --no-same-owner;chown root:adm -R /opt "
 fi
 # configure the container with nginx and install the python code
+lxc config device add simplestream images disk source=$(pwd)/images path=/var/www/simplestreams/images
 lxc exec simplestream -- bash -c /opt/lxd-image-server/scripts/config_container_unit.sh
+
 cat <<EOF
 echo run this command to open port on host:
 
