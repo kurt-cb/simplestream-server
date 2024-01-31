@@ -56,4 +56,4 @@ cluster: null
 EOF
 
 # now generate client certificate for local comms
-lxd remote add local_http https://localhost:8001 --password ${PASSWORD} --accept-certificate
+lxc remote add local_http https://localhost:8001 --password ${PASSWORD} --accept-certificate

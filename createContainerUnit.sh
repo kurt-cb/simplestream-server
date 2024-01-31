@@ -94,5 +94,8 @@ echo run this command to open port on host:
 lxc config device add simplestream http proxy connect="tcp:127.0.0.1:8443" listen="tcp:0.0.0.0:8443"
 lxc config device add simplestream https proxy connect="tcp:127.0.0.1:8000" listen="tcp:0.0.0.0:8000"
 lxc config device add simplestream lxd proxy connect="tcp:127.0.0.1:8001" listen="tcp:0.0.0.0:8001"
-lxd remote add $(basename $(uname -n)) https://$(uname -n):8001 --password ${PASSWORD} --accept-certificate
+
+On client machines, you can get the image store like this
+
+lxc remote add server https://$(uname -n):8001 --password ${PASSWORD} --accept-certificate
 EOF
