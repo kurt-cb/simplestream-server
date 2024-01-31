@@ -85,11 +85,12 @@ usermod -G adm,unit,lxd ubuntu
 chgrp unit /home/ubuntu
 chmod g+s /home/ubuntu
 
-# create venv
+# create venv (this will also create the simplestreams directory structure)
 chown ubuntu /home/ubuntu/user_config.sh
 su ubuntu -c "~/user_config.sh"
 
 # map in images directory
+rm -rf /var/www/simplestream/images
 ln -sf /mnt/images /var/www/simplestreams
 
 # create service
