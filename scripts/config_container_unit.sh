@@ -90,7 +90,7 @@ chown ubuntu /home/ubuntu/user_config.sh
 su ubuntu -c "~/user_config.sh"
 
 # map in images directory
-rm -rf /var/www/simplestream/images
+rm -rf /var/www/simplestreams/images
 ln -sf /mnt/images /var/www/simplestreams
 
 # create service
