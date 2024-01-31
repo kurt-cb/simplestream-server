@@ -16,8 +16,7 @@ rm get-pip.py
 pip config set global.disable-pip-version-check true
 
 pip install bottle uwsgi click inotify cryptography \
-    confight configargparse dbus-python pycairo \
-    PyGObject
+    confight configargparse rpyc
 
 git clone https://github.com/kurt-cb/simplestream-server.git
 cd simplestream-server

@@ -7,7 +7,7 @@ This project is a derivitive work from two related projects:
    https://github.com/cr1st1p/docker-simplestreams-server
 
 The lxd-image-server tool creates json files to satisfiy the simplestream server
-format.  Ngnix server creates the web site that serves up the changes.  finally upload-server allows users to upload images to the container server.
+format.  Ngnix (unit) server creates the web site that serves up the changes.  finally upload-server allows users to upload images to the container server.
 
 The latter, docker-simplestreams-server contained some python code to upload files, and a docker container builder.  Since this is an LxD/LxC ecosystem, this project converts the docker container to an LxD container.
 
@@ -22,16 +22,15 @@ this repo provides a script that generates the LXC container that supports the s
     - clone this repo
     - cd to the repo dir
 
-    $ ./createContainer.sh
+    $ ./createContainerUnit.sh
 
 this will create a container called "simplestream" that will host the entire solution:
 
-   - ngnix - provides web server
-   - lxd-simple-server - creates simplestream format web files
-   - upload-server - provides image management functions
+   - unit(nginx) - provides web server framework
+   - lxd-simple-server - creates simplestream format web files in https://{server}:8443/streams
+   - upload-server - provides image management functions in http://{server}:8000/upload
 
-
-Once the container is running,  the server needs to be exported to the host.  Since this is a "personal" preference, it is not performed in createContainer.sh
+Once the container is running,  the server needs to be exported to the host.  Since this is a "personal" preference, it is not performed in createContainerUnit.sh, however it does provide the lxc device add functions at the end of the script
 
    {host}$ lxc config device add simplestream www-server proxy connect="tcp:127.0.0.1:8443" listen="tcp:0.0.0.0:8443"
 
@@ -51,7 +50,7 @@ This service is not meant to replace the LXD server that is built into LXD.  The
 
 Method 1 - Use LxD administrator facility
 -----------------------------------------
-TBD - connect a "supervisor" client to the LxD server directly (not simplestream), and use `lxc image copy` to transfer files to the server.
+use scripts/upload.sh script to upload a script from the local image store onto the server
 
 Method 2 - Use internal (ssh-proxied) web page to update the server
 -------------------------------------------------------------------

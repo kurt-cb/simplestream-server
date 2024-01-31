@@ -13,7 +13,7 @@ from os.path import isdir, join
 from shutil import rmtree
 
 import bottle
-import dbus
+import rpyc
 from bottle import Bottle
 
 apt = Bottle()
@@ -183,7 +183,7 @@ def serve(urlpath):
                 if DEBUG:
                     print("DEBUG: will save file: {}".format(fileitem.realpath))
                 f.save(fileitem.realpath)
-                dbus_update(fileitem.realpath)
+                rpc_update(fileitem.realpath)
 
         return bottle.redirect('/{}'.format(urlpath))
 
@@ -205,19 +205,12 @@ def serve(urlpath):
             return serve_dir(target.parent)
 
 
-def dbus_update(path):
+def rpc_update(path):
     try:
-        # get the session bus
-        bus = dbus.SessionBus()
-        # get the object
-        the_object = bus.get_object("org.simplestream.service", "/org/simplestream/service")
-        # get the interface
-        the_interface = dbus.Interface(the_object, "org.simplestream.service.Message")
-
-        # call the methods and print the results
-        print("Sending file_update dbus msg for:", path)
-        reply = the_interface.file_update(path)
-        print("dbus reply", reply)
+        print("rpc connect localhost:11886")
+        c = rpyc.connect("localhost", port=11886)
+        reply = c.root.file_notify('abc/123.fil')
+        print("rpc reply", reply)
         print("The notification {} was sent.".format(id))
     except BaseException as e:
         print('Exception: %s' % e)

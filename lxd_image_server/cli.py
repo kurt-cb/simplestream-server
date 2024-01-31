@@ -8,11 +8,8 @@ import threading
 from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
 import click
-import dbus
-import dbus.service
-import dbus.mainloop.glib
-
-from gi.repository import GLib
+import rpyc
+from rpyc.utils.server import ThreadedServer
 
 import inotify.adapters
 from inotify.constants import (IN_ATTRIB, IN_DELETE, IN_MOVED_FROM, IN_CREATE,
@@ -228,32 +225,28 @@ def init(ctx, root_dir, ssl_dir, ssl_skip, nginx_skip):
         fix_permissions(streams_dir)
 
 
-class DbusService(dbus.service.Object):
+class UpdateService(rpyc.Service):
 
     def __init__(self, handler):
         self._handler = handler
 
-    def run(self):
-        dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
-        bus_name = dbus.service.BusName("org.simplestream.service", dbus.SessionBus())
-        dbus.service.Object.__init__(self, bus_name, "/org/simplestream/service")
+    def on_connect(self, conn):
+        # code that runs when a connection is created
+        # (to init the service, if needed)
+        pass
 
-        print("Service running...")
-        self._loop = GLib.MainLoop()
-        self._loop.run()
-        print("Service stopped")
+    def on_disconnect(self, conn):
+        # code that runs after the connection has already closed
+        # (to finalize the service, if needed)
+        pass
 
-    @dbus.service.method("org.simplestream.service.Message", in_signature='', out_signature='s')
-    def file_update(self, name):
-        print("  sending message")
-        self._handler(path=name)
+    def exposed_file_notify(self, path): # this is an exposed method
+        self._handler(path=path)
         return "ok"
 
-    @dbus.service.method("org.simplestream.service.Quit", in_signature='', out_signature='')
-    def quit(self):
-        print("  shutting down")
-        self._loop.quit()
-
+    def run(self):
+        t = ThreadedServer(self, port=11886)
+        t.start()
 
 @cli.command()
 @click.option('--img_dir', default='/var/www/simplestreams/images',
@@ -293,7 +286,7 @@ def dbus_server(ctx, img_dir, streams_dir):
             logger.error('Execption %s', e)
             pass
 
-    DbusService(msg_handler).run()
+    UpdateService(msg_handler).run()
 
 
 @cli.command()
