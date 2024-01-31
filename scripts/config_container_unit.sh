@@ -69,8 +69,8 @@ cp -r html /var/www
 mkdir -p /var/www/simplestreams
 chown -R unit:unit /var/www
 chmod -R g+s /var/www/simplestreams
-ln -s /mnt/images /var/www/simplestreams/images
 chmod -R g+w /var/www
+ln -s /mnt/images /var/www/simplestreams/images
 cp scripts/user_config.sh /home/ubuntu
 cd ..
 
