@@ -7,7 +7,15 @@
 set -x
 set -e
 SERVER=$(uname -n)
+PASSWORD="$1"
 
+if [  "${PASSWORD}" == "" ]; then
+  echo Usage:  createContainerUnit.sh {server_password}
+  echo
+  echo server_password is the password to connect to the lxd server
+  echo using the 'lxc remote add' command
+  echo
+fi
 
 function addUserToContainer() {
     local CONTAINER_NAME="$1"
@@ -77,11 +85,13 @@ mkdir -m 777 -p images
 
 lxc config device add simplestream images disk source=$(pwd)/images path=/mnt/images
 printf "uid $(id -u) 0\ngid $(id -g) 0" | lxc config set simplestream raw.idmap -
-lxc exec simplestream -- bash -c /opt/lxd-image-server/scripts/config_container_unit.sh $(uname -n)
+lxc exec simplestream -- bash -c /opt/lxd-image-server/scripts/config_container_unit.sh $(uname -n) "${PASSWORD}"
 
 cat <<EOF
 echo run this command to open port on host:
 
 lxc config device add simplestream http proxy connect="tcp:127.0.0.1:8443" listen="tcp:0.0.0.0:8443"
 lxc config device add simplestream https proxy connect="tcp:127.0.0.1:8000" listen="tcp:0.0.0.0:8000"
+lxc config device add simplestream lxd proxy connect="tcp:127.0.0.1:8001" listen="tcp:0.0.0.0:8001"
+lxd remote add $(basename $(uname -n)) https://$(uname -n):8001 --password ${PASSWORD} --accept-certificate
 EOF

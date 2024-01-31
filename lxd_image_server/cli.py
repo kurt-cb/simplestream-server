@@ -8,6 +8,7 @@ import threading
 from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
 import click
+from pylxd import Client
 import rpyc
 from rpyc.utils.server import ThreadedServer
 
@@ -19,7 +20,6 @@ from lxd_image_server.tools.cert import generate_cert
 from lxd_image_server.tools.operation import Operations
 from lxd_image_server.tools.mirror import MirrorManager
 from lxd_image_server.tools.config import Config
-
 
 logger = logging.getLogger('lxd-image-server')
 event_queue = queue.Queue()
@@ -242,6 +242,10 @@ class UpdateService(rpyc.Service):
 
     def exposed_file_notify(self, path): # this is an exposed method
         self._handler(path=path)
+        return "ok"
+
+    def exposed_migrate_image(self, image): # this is an exposed method
+        c = Client()
         return "ok"
 
     def run(self):

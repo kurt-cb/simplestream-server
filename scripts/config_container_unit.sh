@@ -12,6 +12,7 @@
 #
 
 PARENT_HOSTNAME=$1
+PASSWORD="$2"
 
 set -x
 
@@ -80,7 +81,7 @@ cp scripts/user_config.sh /home/ubuntu
 cd ..
 
 # put ubuntu in unit group
-usermod -G adm,unit ubuntu
+usermod -G adm,unit,lxd ubuntu
 chgrp unit /home/ubuntu
 chmod g+s /home/ubuntu
 
@@ -106,7 +107,7 @@ cat simplestream-server/unit_config.json | curl -X PUT -d@- localhost:8080/confi
 cat <<EOF | lxd init --preseed
 config:
   core.https_address: '[::]:8001'
-  core.trust_password: itron
+  core.trust_password: ${PASSWORD}
   images.auto_update_interval: "0"
 networks: []
 storage_pools:
