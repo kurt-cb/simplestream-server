@@ -10,12 +10,10 @@
 #
 # venv location: /home/ubuntu/ss-env
 #
+set -x
 
 PARENT_HOSTNAME=$1
 PASSWORD="$2"
-
-set -x
-
 ROOTDIR=/opt/lxd-image-server
 
 hostname ${PARENT_HOSTNAME}

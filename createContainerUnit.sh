@@ -86,7 +86,7 @@ mkdir -m 777 -p images
 
 lxc config device add simplestream images disk source=$(pwd)/images path=/mnt/images
 printf "uid $(id -u) 0\ngid $(id -g) 0" | lxc config set simplestream raw.idmap -
-lxc exec simplestream -- bash -c /opt/lxd-image-server/scripts/config_container_unit.sh $(uname -n) "${PASSWORD}"
+lxc exec simplestream -- bash -c "/opt/lxd-image-server/scripts/config_container_unit.sh $(uname -n) \"${PASSWORD}\""
 
 cat <<EOF
 echo run this command to open port on host:
