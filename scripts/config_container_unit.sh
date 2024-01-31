@@ -32,7 +32,7 @@ apt-get install $OPTIONS \
    gnupg2 apt-transport-https ca-certificates curl wget \
    strace curl wget netcat nano git patch net-tools build-essential \
    cmake libdbus-glib-1-dev libgirepository1.0-dev \
-   libcairo2-dev pkg-config python3-dev
+   libcairo2-dev pkg-config python3-dev dbus-x11
 
 sudo curl --output /usr/share/keyrings/nginx-keyring.gpg  \
       https://unit.nginx.org/keys/nginx-keyring.gpg
@@ -69,6 +69,7 @@ cp -r html /var/www
 mkdir -p /var/www/simplestreams
 chown -R unit:unit /var/www
 chmod -R g+s /var/www/simplestreams
+ln -s /mnt/images /var/www/simplestreams/images
 chmod -R g+w /var/www
 cp scripts/user_config.sh /home/ubuntu
 cd ..
