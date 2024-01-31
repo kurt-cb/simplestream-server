@@ -9,7 +9,7 @@ set -e
 SERVER=$(uname -n)
 PASSWORD="$1"
 
-if [  "${PASSWORD}" == "" ]; then
+if [  "${PASSWORD}" != "" ]; then
   echo Usage:  createContainerUnit.sh {server_password}
   echo
   echo server_password is the password to connect to the lxd server
