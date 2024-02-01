@@ -8,8 +8,12 @@ import threading
 from logging.handlers import TimedRotatingFileHandler
 from pathlib import Path
 import click
+from pylxd import Client
+import rpyc
+from rpyc.utils.server import ThreadedServer
+
 import inotify.adapters
-from inotify.constants import (IN_ATTRIB, IN_DELETE, IN_MOVED_FROM,
+from inotify.constants import (IN_ATTRIB, IN_DELETE, IN_MOVED_FROM, IN_CREATE,
                                IN_MOVED_TO, IN_CLOSE_WRITE)
 from lxd_image_server.simplestreams.images import Images
 from lxd_image_server.tools.cert import generate_cert
@@ -17,9 +21,9 @@ from lxd_image_server.tools.operation import Operations
 from lxd_image_server.tools.mirror import MirrorManager
 from lxd_image_server.tools.config import Config
 
-
 logger = logging.getLogger('lxd-image-server')
 event_queue = queue.Queue()
+
 
 def threaded(fn):
     def wrapper(*args, **kwargs):
@@ -48,16 +52,16 @@ def configure_log(log_file, verbose=False):
 def needs_update(events):
     modified_files = []
     for event in list(events):
+        logger.debug("needs_update - event %s", event)
         if re.match('\d{8}_\d{2}:\d{2}', event[3]) or \
             any(k in event[1]
-                for k in ('IN_MOVED_FROM', 'IN_MOVED_TO',
+                for k in ('IN_CREATE', 'IN_MOVED_FROM', 'IN_MOVED_TO',
                           'IN_DELETE', 'IN_CLOSE_WRITE')):
             logger.debug('Event: PATH=[{}] FILENAME=[{}] EVENT_TYPES={}'
                          .format(event[2], event[3], event[1]))
             modified_files.append(event)
 
     return modified_files
-
 
 
 def config_inotify_setup(skipWatchingNonExistent: bool) -> inotify.adapters.Inotify:
@@ -68,10 +72,10 @@ def config_inotify_setup(skipWatchingNonExistent: bool) -> inotify.adapters.Inot
         if os.path.exists(p):
             if os.path.isfile(p):
                 logger.debug("Watching existing config file {}".format(p))
-                i.add_watch(p, mask= inotify.constants.IN_CLOSE_WRITE | inotify.constants.IN_DELETE)
+                i.add_watch(p, mask=inotify.constants.IN_CLOSE_WRITE | inotify.constants.IN_DELETE)
             else:
                 logger.debug("Watching existing config directory {}".format(p))
-                i.add_watch(p) # SEEME: all events?
+                i.add_watch(p)  # SEEME: all events?
         elif not skipWatchingNonExistent:
             (d, n) = os.path.split(p)
             while not os.path.exists(d):
@@ -83,12 +87,14 @@ def config_inotify_setup(skipWatchingNonExistent: bool) -> inotify.adapters.Inot
 
     return i
 
+
 @threaded
-def update_config(skipWatchingNonExistent = True):
+def update_config(skipWatchingNonExistent=True):
     i = config_inotify_setup(skipWatchingNonExistent)
     while True:
         reload = False
         for event in i.event_gen(yield_nones=False):
+            logger.debug("needs_config - event %s", event)
             (_, mask, dir, file) = event
             fp = os.path.join(dir, file).rstrip(os.path.sep)
             for p in Config.paths:
@@ -219,6 +225,78 @@ def init(ctx, root_dir, ssl_dir, ssl_skip, nginx_skip):
         fix_permissions(streams_dir)
 
 
+class UpdateService(rpyc.Service):
+
+    def __init__(self, handler):
+        self._handler = handler
+
+    def on_connect(self, conn):
+        # code that runs when a connection is created
+        # (to init the service, if needed)
+        pass
+
+    def on_disconnect(self, conn):
+        # code that runs after the connection has already closed
+        # (to finalize the service, if needed)
+        pass
+
+    def exposed_file_notify(self, path): # this is an exposed method
+        self._handler(path=path)
+        return "ok"
+
+    def exposed_migrate_image(self, image): # this is an exposed method
+        c = Client(endpoint="https://localhost:8001", cert=('/home/ubuntu/.config/lxc/client.crt', '/home/ubuntu/.config/lxc/client.key'), verify='/home/ubuntu/.config/lxc/servercerts/local_http.crt')
+        images = c.images.all()
+
+        # TODO: migrate image to lxd
+
+        return "ok"
+
+    def run(self):
+        t = ThreadedServer(self, port=11886)
+        t.start()
+
+@cli.command()
+@click.option('--img_dir', default='/var/www/simplestreams/images',
+              show_default=True,
+              type=click.Path(exists=True, file_okay=False,
+                              resolve_path=True))
+@click.option('--streams_dir', default='/var/www/simplestreams/streams/v1',
+              type=click.Path(exists=True, file_okay=False,
+                              resolve_path=True), show_default=True)
+@click.pass_context
+def rpc_server(ctx, img_dir, streams_dir):
+
+    def msg_handler(*args, **keywords):
+        try:
+            msg = str(keywords['path'])
+
+            logger.info("RPC message: %s", msg)
+            logger.info('Updating server')
+
+            img_dirp = Path(img_dir).expanduser().resolve()
+            streams_dirp = Path(streams_dir).expanduser().resolve()
+
+            images = Images(str(Path(streams_dirp).resolve()), rebuild=True, logger=logger)
+
+            # Generate a fake event to update all tree
+            fake_events = [
+                (None, ['IN_ISDIR', 'IN_CREATE'],
+                    str(img_dirp.parent), str(img_dirp.name))
+            ]
+            operations = Operations(fake_events, str(img_dir))
+            images.update(operations.ops)
+            images.save()
+
+            logger.info('Server updated')
+
+        except BaseException as e:
+            logger.error('Execption %s', e)
+            pass
+
+    UpdateService(msg_handler).run()
+
+
 @cli.command()
 @click.option('--img_dir', default='/var/www/simplestreams/images',
               show_default=True,
@@ -241,17 +319,19 @@ def watch(ctx, img_dir, streams_dir, skip_watch_config_non_existent: bool):
     # Also, race condition on calling MirrorManager.update_mirror_list() in both threads.
     update_config(skip_watch_config_non_existent)
     update_metadata(path_img_dir, path_streams_dir)
-    logger.debug("Watching image directory {}".format(path_img_dir))
-
-    i = inotify.adapters.InotifyTree(path_img_dir,
-                                     mask=(IN_ATTRIB | IN_DELETE |
-                                           IN_MOVED_FROM | IN_MOVED_TO |
-                                           IN_CLOSE_WRITE))
 
     while True:
+        logger.debug("Watching image directory {}".format(path_img_dir))
+
+        i = inotify.adapters.InotifyTree(path_img_dir,
+                                         mask=(IN_ATTRIB | IN_DELETE | IN_CREATE |
+                                               IN_MOVED_FROM | IN_MOVED_TO |
+                                               IN_CLOSE_WRITE))
+
         events = i.event_gen(yield_nones=False, timeout_s=15)
         files_changed = needs_update(events)
         if files_changed:
+            logger.debug("Files changed {}".format(files_changed))
             event_queue.put(files_changed)
 
 

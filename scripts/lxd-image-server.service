@@ -6,11 +6,11 @@ After=network.target
 WantedBy=multi-user.target
 
 [Service]
+WorkingDirectory=/var/www
 Restart=on-failure
-User=lxdadm
+User=unit
 StandardOutput=journal+console
 Environment="LC_ALL=C.UTF-8"
 Environment="LANG=C.UTF-8"
 
-ExecStart=/usr/local/bin/lxd-image-server/lxd-image-server watch
-ExecReload=/bin/sh -c '/usr/local/bin/lxd-image-server reload'
+ExecStart=/home/ubuntu/ss-env/bin/lxd-image-server --verbose --log-file /var/www/logs/lxd-image-server.log rpc-server

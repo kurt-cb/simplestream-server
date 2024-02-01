@@ -2,24 +2,29 @@
 
 # modified from https://github.com/pi314/hfs/blob/master/hfs/core.py
 
-import argparse
 import datetime
 import mimetypes
 import os
 import re
 import sys
-
+import configargparse
 from contextlib import suppress
 from os.path import isdir, join
 from shutil import rmtree
 
 import bottle
+import rpyc
+from bottle import Bottle
+
+apt = Bottle()
+bottle.debug(True)
 
 PROJECT_ROOT = os.path.dirname(os.path.realpath(__file__))
 
 bottle.TEMPLATE_PATH = [
     join(PROJECT_ROOT, 'html'),
 ]
+bottle.MEMFILE_MAX = 10 * 1024 * 1024 * 1024
 
 BASE_DIR = PROJECT_ROOT
 ALLOW_DELETES = False
@@ -35,17 +40,15 @@ flist_filters = {
 }
 
 
-
-
 class FileItem:
     def __init__(self, fpath):
         fpath = fpath if fpath else '.'
         fpath = re.sub(r'/+', '/', fpath).strip('/')
         if '/../' in fpath or fpath.startswith('../') or ('..' == fpath):
             raise bottle.HTTPError(status=403, body='Invalid path')
-        
+
         fpath = '' if fpath in ['.', '..'] else fpath
-        
+
         self.fpath = fpath
 
     @property
@@ -109,11 +112,10 @@ class DirectoryItem:
         self.dpath = dpath
 
     def __add__(self, dname):
-        return DirectoryItem(dname, self.dpath + '/' + dname)
+        return DirectoryItem(dname, os.path.join(self.dpath, dname))
 
     def __repr__(self):
         return '<DirectoryItem: "{}">'.format(self.dpath)
-
 
 
 def is_user_agent_curl():
@@ -122,19 +124,19 @@ def is_user_agent_curl():
 
 def is_client_denied(client_addr):
     return False
-    
 
-@bottle.route('/', method=('GET', 'POST'))
+
+@apt.route('/', method=('GET', 'POST'))
 def root():
     return serve('.')
 
 
-@bottle.route('/static/<urlpath:path>')
+@apt.route('/static/<urlpath:path>')
 def static(urlpath):
     return bottle.static_file(urlpath, root=join(PROJECT_ROOT, 'static'))
 
 
-@bottle.route('/<urlpath:path>', method=('GET', 'POST', 'DELETE'))
+@apt.route('/<urlpath:path>', method=('GET', 'POST', 'DELETE'))
 def serve(urlpath):
     target = FileItem(urlpath)
     global DEBUG
@@ -160,7 +162,7 @@ def serve(urlpath):
 
                 return bottle.redirect('/{}'.format(urlpath))
 
-            for f in upload:                
+            for f in upload:
                 fpath = get_uniq_fpath(join(target.fpath, f.raw_filename))
                 if DEBUG:
                     print("DEBUG: upload file: {}".format(fpath))
@@ -174,13 +176,14 @@ def serve(urlpath):
 
                     os.remove(fileitem.realpath)
 
-                if ALLOW_CREATE_DIRS: 
+                if ALLOW_CREATE_DIRS:
                     d = os.path.dirname(fileitem.realpath)
                     if not isdir(d):
                         os.makedirs(d)
                 if DEBUG:
                     print("DEBUG: will save file: {}".format(fileitem.realpath))
                 f.save(fileitem.realpath)
+                rpc_update(fileitem.realpath)
 
         return bottle.redirect('/{}'.format(urlpath))
 
@@ -202,9 +205,21 @@ def serve(urlpath):
             return serve_dir(target.parent)
 
 
-@bottle.error(403)
-@bottle.error(404)
-@bottle.error(405)
+def rpc_update(path):
+    try:
+        print("rpc connect localhost:11886")
+        c = rpyc.connect("localhost", port=11886)
+        reply = c.root.file_notify('abc/123.fil')
+        print("rpc reply", reply)
+        print("The notification {} was sent.".format(id))
+    except BaseException as e:
+        print('Exception: %s' % e)
+
+
+@apt.error(403)
+@apt.error(404)
+@apt.error(405)
+@apt.error(413)
 def error_page(error):
     status = error.status
     reason = error.body
@@ -226,7 +241,7 @@ def error_page(error):
 def serve_file(fileitem: FileItem):
     mimetype = mimetypes.guess_type(fileitem.realpath)[0]
     if mimetype is None:
-        mimetype='application/octet-stream'
+        mimetype = 'application/octet-stream'
 
     global BASE_DIR
     target_file = bottle.static_file(
@@ -313,29 +328,41 @@ def get_uniq_fpath(filepath):
     return fitem.fpath
 
 
-def main():
+def environ_or_required(key):
+    return (
+        {'default': os.environ.get(key)} if os.environ.get(key)
+        else {'required': True}
+    )
+
+
+def parseargs():
     print("\n\nFile Upload server starting...\n\n", flush=True)
 
-    parser = argparse.ArgumentParser(
+    parser = configargparse.ArgumentParser(
         description='Simple HTTP File Server',
-        prog='upload-server')
+        prog='upload-server',
+        default_config_files=[
+            '/etc/upload_server.conf',
+            '~/.upload_server.conf']
+            )
 
-    parser.add_argument('--port',
-        help='The port this server should listen on',
-        nargs='?', type=int, default=8000)
-
-    parser.add_argument('--allow-delete', 
+    parser.add('-c', '--my-config', default="/etc/upload_server.conf", is_config_file=True, help='config file path')
+    parser.add_argument(
+        '--allow-delete',
         help='Allow deletes',
-        default=False, action='store_true')
-    parser.add_argument('--debug', 
+        default=True, action='store_true')
+    parser.add_argument(
+        '--debug',
         help='Print debugging info',
         default=False, action='store_true')
 
-    parser.add_argument('--allow-overwrite', 
+    parser.add_argument(
+        '--allow-overwrite',
         help='Allow overwrites',
         default=False, action='store_true')
 
-    parser.add_argument('--base-dir', 
+    parser.add_argument(
+        '--base-dir',
         help='Base directory to serve',
         type=str)
 
@@ -360,13 +387,33 @@ def main():
         BASE_DIR = args.base_dir
         if not isdir(BASE_DIR):
             print("'{}' is not a directory".format(BASE_DIR))
-            sys.exit(1)        
+            sys.exit(1)
 
     print("BASE_DIR: ", BASE_DIR)
+    return args
 
-    bottle.run(host='0.0.0.0', port=args.port)
+
+def main(args):
+    bottle.run(app=apt, host='0.0.0.0', port=args.port)
+    """
+    bottle.run(
+        app=BASE,
+        host='0.0.0.0',
+        port=args.port,
+        server='gunicorn',
+        reloader=1,
+        debug=1,
+        keyfile='key.pem',
+        certfile='cert.pem'
+    )
+    """
+
+
+def get_apt():
+    return apt
 
 
 if __name__ == '__main__':
-    main()
+    args = parseargs()
+    main(args)
 

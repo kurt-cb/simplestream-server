@@ -1,0 +1,83 @@
+{
+    "listeners": {
+            "*:8000": {
+                "pass": "routes"
+            },
+            "*:8443": {
+                "pass": "routes",
+                "tls": {
+                    "certificate": "bundle"
+                }
+            }
+    },
+    "routes": [
+        {
+            "match": {
+                "uri": "/html/*"
+            },
+            "action": {
+                "share": "/var/www/$uri"
+            }
+        },
+        {
+            "match": {
+                "uri": "/"
+            },
+            "action": {
+                "share": "/var/www/html/index.html"
+            }
+        },
+        {
+            "match": {
+                "uri": "/cert.crt"
+            },
+            "action": {
+                "share": "/opt/lxd-image-server/cert.pem"
+            }
+        },
+        {
+            "match": {
+                "uri": "/upload/*"
+            },
+            "action": {
+                "pass": "applications/upload"
+            }
+        },
+        {
+            "match": {
+                "uri": "/streams/*"
+            },
+            "action": {
+                "share": "/var/www/simplestreams$uri"
+            }
+        },
+        {
+            "match": {
+                "uri": "/logs/*"
+            },
+            "action": {
+                "share": "/var/www/$uri"
+            }
+        }
+    ],
+    "applications": {
+        "upload": {
+            "type": "python 3.7",
+            "path": "/home/ubuntu/simplestream-server/upload_server/",
+            "working_directory": "/var/www/simplestreams/images",
+            "home": "/home/ubuntu/ss-env/",
+            "prefix": "/upload",
+            "module": "wsgi",
+            "callable": "app",
+            "stdout": "/var/www/logs/upload.log",
+            "stderr": "/var/www/logs/upload.err"
+        }
+    },
+    "access_log": "/var/www/logs/access.log",
+    "settings":  {
+        "http": {
+            "log_route": true,
+            "max_body_size": 10737418240
+        }
+    }
+}
