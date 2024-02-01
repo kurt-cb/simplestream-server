@@ -245,7 +245,11 @@ class UpdateService(rpyc.Service):
         return "ok"
 
     def exposed_migrate_image(self, image): # this is an exposed method
-        c = Client()
+        c = Client(endpoint="https://localhost:8001", cert=('/home/ubuntu/.config/lxc/client.crt', '/home/ubuntu/.config/lxc/client.key'), verify='/home/ubuntu/.config/lxc/servercerts/local_http.crt')
+        images = c.images.all()
+
+        # TODO: migrate image to lxd
+
         return "ok"
 
     def run(self):
